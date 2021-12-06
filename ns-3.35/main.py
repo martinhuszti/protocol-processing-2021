@@ -1,33 +1,27 @@
-# /*
-#  * This program is free software; you can redistribute it and/or modify
-#  * it under the terms of the GNU General Public License version 2 as
-#  * published by the Free Software Foundation;
-#  *
-#  * This program is distributed in the hope that it will be useful,
-#  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  * GNU General Public License for more details.
-#  *
-#  * You should have received a copy of the GNU General Public License
-#  * along with this program; if not, write to the Free Software
-#  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#  */
 
 import ns.applications
 import ns.core
+import ns.dsdv
 import ns.internet
 import ns.network
 import ns.point_to_point
+from keyboard_interpreter import read_command
+import user_interface
 
-# // Default Network Topology
-# //
-# //       10.1.1.0
-# // n0 -------------- n1
-# //    point-to-point
-# //
+
+user_interface.welcome()
+
+user_interface.control_panel()
+
+read_command()
+
+
 
 ns.core.LogComponentEnable("UdpEchoClientApplication", ns.core.LOG_LEVEL_INFO)
 ns.core.LogComponentEnable("UdpEchoServerApplication", ns.core.LOG_LEVEL_INFO)
+
+# routingTable = ns.RoutingTable()
+# routingTable.Print()
 
 nodes = ns.network.NodeContainer()
 nodes.Create(2)
