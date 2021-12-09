@@ -27,6 +27,8 @@ while True:
         network.print_network()
     if sc == 2:
         network.add_router(generate_network())
+    if sc == 3:
+        network.remove_router()
     # if we recieve a number 9, exit
     if sc == 9:
         break
