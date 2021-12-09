@@ -1,7 +1,7 @@
 from bcolors import bcolors
 
 
-def line():
+def print_line():
     print("______________________________\n")
 
 
@@ -13,7 +13,7 @@ def welcome():
     print("- Mirko Ioris")
     print("- Francesco Pavanello")
     print("- Victor Schmit"+bcolors.ENDC)
-    line()
+    print_line()
 
 
 def control_panel():
@@ -25,3 +25,9 @@ def control_panel():
     print("- 3. Add link")
     print("- 4. Remove router")
     print("- 5. Remove link\n")
+    print("- 9. Exit\n")
+
+def goodbye():
+    
+    print(bcolors.BOLD + bcolors.UNDERLINE +
+          "Thank you for using our program!"+bcolors.ENDC)
