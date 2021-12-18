@@ -19,7 +19,6 @@ network = CustomNetwork()
 user_interface.welcome()
 # Show the possible commands
 user_interface.control_panel()
-sc = 0
 
 while True:
     sc = read_command()
@@ -27,7 +26,9 @@ while True:
         network.print_network()
     if sc == 2:
         network.add_router(generate_network())
-    if sc == 3:
+    if sc == 4:
+        network.add_link()
+    if sc == 4:
         network.remove_router()
     # if we recieve a number 9, exit
     if sc == 9:

@@ -14,11 +14,10 @@ def welcome():
     print("- Francesco Pavanello")
     print("- Victor Schmit"+bcolors.ENDC)
     print_line()
-
-
-def control_panel():
     print(bcolors.BOLD + bcolors.HEADER +
         'Moi! Welcome to our network simulator for Protocol Processing 2021! 🔥 \n' + bcolors.ENDC)
+
+def control_panel():
     print(bcolors.UNDERLINE+"Choose what you want to do: \n" + bcolors.ENDC)
     print("- 1. Show topology")
     print("- 2. Add router")

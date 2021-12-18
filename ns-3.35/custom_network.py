@@ -9,6 +9,11 @@ class CustomNetwork:
     def add_router(self, router):
         self.routers.append(router)
 
+    def add_link(self, router):
+        first_router = input('First router:')
+        second_router = input('Second router:')
+
+
     def remove_router(self):
         self.print_network()
         sr = input('Which router you want to remove: ')
