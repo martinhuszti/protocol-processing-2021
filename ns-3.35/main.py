@@ -20,13 +20,24 @@ user_interface.welcome()
 # Show the possible commands
 user_interface.control_panel()
 
+#Tasks to be implemented:
+
+# Keepalive messages needed when an iteration is running
+# Set up TCP con between the routers
+# Each router has router table
+# Create suitable IP packets (need header field)
+# Error conditions (router offline, link dropped)
+# Voting
+#
+
+# BGP Messages: OPEN, UPDATE, NOTIFICATION, KEEP_ALIVE
 while True:
     sc = read_command()
     if sc == 1:
         network.print_network()
     if sc == 2:
         network.add_router(generate_network())
-    if sc == 4:
+    if sc == 3:
         network.add_link()
     if sc == 4:
         network.remove_router()

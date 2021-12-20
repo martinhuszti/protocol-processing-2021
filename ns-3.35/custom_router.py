@@ -4,3 +4,7 @@ class CustomRouter:
     
     def print(self):
         print(self.name)
+
+    def readREquest(string str):
+        if string "ACK":
+        if string "FIN":
