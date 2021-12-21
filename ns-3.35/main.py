@@ -10,7 +10,7 @@ import ns.point_to_point
 from custom_network import CustomNetwork
 
 import user_interface
-from generate_network import generate_network
+from create_custom_router import create_custom_router
 from keyboard_interpreter import read_command
 
 network = CustomNetwork()
@@ -22,6 +22,9 @@ user_interface.control_panel()
 
 #Tasks to be implemented:
 
+network.add_router(create_custom_router('predefined router 1'))
+network.add_router(create_custom_router('predefined router 2'))
+network.add_link(0,1)
 # Keepalive messages needed when an iteration is running
 # Set up TCP con between the routers
 # Each router has router table
@@ -36,7 +39,7 @@ while True:
     if sc == 1:
         network.print_network()
     if sc == 2:
-        network.add_router(generate_network())
+        network.add_router(create_custom_router())
     if sc == 3:
         network.add_link()
     if sc == 4:
