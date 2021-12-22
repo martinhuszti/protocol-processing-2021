@@ -1,7 +1,5 @@
 from bcolors import bcolors
 
-MAX_NUMBER_OF_COMMANDS = 5
-
 # Read command from user. Also check the validity of the given number
 def read_command():
     while True:
@@ -12,7 +10,7 @@ def read_command():
             continue
 
         userinput_num = int(userinput)
-        if userinput_num != 9 and (userinput_num < 1 or userinput_num > MAX_NUMBER_OF_COMMANDS):
+        if (userinput_num < 1 or userinput_num > 9):
             print(
                 bcolors.FAIL + "The selected command is out of range! Please try again!" + bcolors.ENDC)
             continue

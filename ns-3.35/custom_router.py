@@ -13,13 +13,13 @@ class CustomRouter:
 
     def send_tcp_msg(self, _to, msg: CustomTcpMessage):
         self.current_seq_num = random()
-        # If syn, generate seq number
-        if(msg.type == ETCP_MSG_TYPE.SYN):
+        # If syn, generate seq number otherwise it is containing already
+        if(msg.type == ETCP_MSG_TYPE.SYN or msg.type == ETCP_MSG_TYPE.FIN):
             msg.seq_num = self.current_seq_num
-            print(f'{self.name}: sending SYN message to {_to.name}')
+            print(f'{self.name}: sending {msg.type.name} message to {_to.name}')
+        # Simulate that the message is arrived to the router
         _to.receive_tcp_msg(self, msg)
 
-    # Need to add _from router to be able to call back
     def receive_tcp_msg(self, _from, tcp_message: CustomTcpMessage):
         print(f'{self.name}: TCP message arrived: {tcp_message.type.name}')
         _type = tcp_message.type
@@ -31,14 +31,32 @@ class CustomRouter:
 
         if _type == ETCP_MSG_TYPE.SYN_ACK:
             if(tcp_message.seq_num == self.current_seq_num):
-                print(f"{self.name}: The sequence number is correct, initalizing connection")
-                self.send_tcp_msg(_from,CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
+                print(
+                    f"{self.name}: The sequence number is correct, initalizing connection")
+                self.send_tcp_msg(
+                    _from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
                 self.current_seq_num = 0
                 self.links.append(_from)
-        
+
         if _type == ETCP_MSG_TYPE.ACK:
-            print(f"{self.name}: Initializing connection")
-            self.links.append(_from)
+            if(tcp_message.is_fin_ack_respone == True):
+                print(
+                    f"{self.name}: ACK arrived to the FIN_ACK message. Removing the link...")
+                self.links.remove(_from)
+            else:
+                print(f"{self.name}: Initializing connection")
+                self.links.append(_from)
+
+        if _type == ETCP_MSG_TYPE.FIN_ACK:
+            self.links.remove(_from)
+            print(f"{self.name}: Sending back ACK awith is_fin_ack_response true flag")
+            self.send_tcp_msg(
+                _from,
+                CustomTcpMessage(type=ETCP_MSG_TYPE.ACK,
+                                 is_fin_ack_respone=True)
+            )
 
         if _type == ETCP_MSG_TYPE.FIN:
-            self.links.remove(_from)
+            # Only if ACK arrives remove from the list
+            print(f"{self.name}: Sending back FIN_ACK")
+            self.send_tcp_msg(_from, CustomTcpMessage(type=ETCP_MSG_TYPE.FIN_ACK))

@@ -22,9 +22,9 @@ user_interface.control_panel()
 
 #Tasks to be implemented:
 
-network.add_router(create_custom_router('predefined router 1'))
-network.add_router(create_custom_router('predefined router 2'))
-network.add_link(0,1)
+network.add_router(create_custom_router('Test_router_1'))
+network.add_router(create_custom_router('Test_router_2'))
+# network.add_link(0,1)
 # Keepalive messages needed when an iteration is running
 # Set up TCP con between the routers
 # Each router has router table
@@ -38,13 +38,22 @@ while True:
     sc = read_command()
     if sc == 1:
         network.print_network()
+        continue
     if sc == 2:
         network.add_router(create_custom_router())
+        continue
     if sc == 3:
-        network.add_link()
-    if sc == 4:
         network.remove_router()
-    # if we recieve a number 9, exit
+        continue
+    if sc == 4:
+        network.add_link()
+        continue
+    if sc == 5:
+        network.remove_link()
+        continue
+    if sc == 8:
+        user_interface.control_panel()
+        continue
     if sc == 9:
         break
 

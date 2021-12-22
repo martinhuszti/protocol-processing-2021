@@ -16,26 +16,38 @@ class CustomNetwork:
     def get_network_size(self):
         return len(self.routers)
 
-#idx1 and 2 are for testing purposes 
-    def add_link(self,idx1,idx2):
+# idx1 and 2 are for testing purposes
+    def add_link(self, idx1=None, idx2=None):
+        self._printRouters()
         if(idx1 != None and idx2 != None):
             first_router_idx = idx1
             second_router_idx = idx2
         else:
             first_router_idx = input('First router index:')
             second_router_idx = input('Second router index:')
-        
+
         if(int(first_router_idx) >= self.get_network_size() or int(second_router_idx) >= self.get_network_size()):
             print("Invalid indexes... returning")
             pass
         first_router = self.routers[int(first_router_idx)]
         second_router = self.routers[int(second_router_idx)]
         first_router.send_tcp_msg(
-            _to = second_router, msg= CustomTcpMessage(type=ETCP_MSG_TYPE.SYN))
-        self.links.append((first_router,second_router))
+            _to=second_router, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.SYN))
+        self.links.append((first_router, second_router))
         print('Link created between the two router')
 
-
+    def remove_link(self):
+        self._printLinks()
+        selected_idx = input('Link to remove: ')
+        if int(selected_idx) >= len(self.links):
+            print('Wrong index!')
+            return
+        selected_link = self.links[int(selected_idx)]
+        router1: CustomRouter = selected_link[0]
+        router2: CustomRouter = selected_link[1]
+        router1.send_tcp_msg(
+            _to=router2, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.FIN))
+        self.links.pop(int(selected_idx))
 
     def remove_router(self):
         self.print_network()
@@ -48,10 +60,17 @@ class CustomNetwork:
 
     def print_network(self):
         print(bcolors.OKCYAN+"Current network topology:")
-        for i, r in enumerate(self.routers):
-            print(f'{i}: {r.name}') 
-        print("\nLinks")
-        for pair1,pair2 in self.links:
-            print(f'{i}: {pair1.name} - {pair2.name}')
+        self._printRouters()
+        self._printLinks()
         print_line()
         print(bcolors.ENDC)
+
+    def _printRouters(self):
+        print("\nRouters")
+        for i, r in enumerate(self.routers):
+            print(f'{i}: {r.name}')
+
+    def _printLinks(self):
+        print("\nLinks")
+        for i, pairs in enumerate(self.links):
+            print(f'{i}: {pairs[0].name} - {pairs[1].name}')

@@ -21,9 +21,10 @@ def control_panel():
     print(bcolors.UNDERLINE+"Choose what you want to do: \n" + bcolors.ENDC)
     print("- 1. Show topology")
     print("- 2. Add router")
-    print("- 3. Add link")
-    print("- 4. Remove router")
-    print("- 5. Remove link\n")
+    print("- 3. Remove router")
+    print("- 4. Add link")
+    print("- 5. Remove link")
+    print("- 8. Show commands\n")
     print("- 9. Exit\n")
 
 def goodbye():
