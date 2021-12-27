@@ -1,5 +1,6 @@
 from typing import List
 from bcolors import bcolors
+from custom_packet import CustomPacket
 from custom_router import CustomRouter
 from custom_tcp_message import ETCP_MSG_TYPE, CustomTcpMessage
 from user_interface import print_line
@@ -74,3 +75,12 @@ class CustomNetwork:
         print("\nLinks")
         for i, pairs in enumerate(self.links):
             print(f'{i}: {pairs[0].name} - {pairs[1].name}')
+
+    def send_packet(self):
+        print("Sending packet from router to router:")
+        inp = input("Index of the source router:")
+        ip_to = input("Destination IP")
+        if int(inp) or int(inp) > len(inp):
+            router = self.routers[int(inp)]
+            router.send_packet(ip_to,CustomPacket())
+            

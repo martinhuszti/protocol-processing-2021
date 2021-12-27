@@ -1,3 +1,4 @@
+from custom_packet import CustomPacket
 from custom_tcp_message import ETCP_MSG_TYPE, CustomTcpMessage
 
 from random import random
@@ -60,3 +61,7 @@ class CustomRouter:
             # Only if ACK arrives remove from the list
             print(f"{self.name}: Sending back FIN_ACK")
             self.send_tcp_msg(_from, CustomTcpMessage(type=ETCP_MSG_TYPE.FIN_ACK))
+
+    def send_packet(self, _to, packet: CustomPacket):
+        
+        pass
