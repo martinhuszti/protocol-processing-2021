@@ -12,9 +12,11 @@ class ETCP_MSG_TYPE(Enum):
 class CustomTcpMessage:
     seq_num = 0
 
-    def __init__(self, type: ETCP_MSG_TYPE, seq_num = -1, is_fin_ack_respone=False) -> None:
+    def __init__(self, type: ETCP_MSG_TYPE, seq_num=-1, is_fin_ack_respone=False, ip_address="0.0.0.0", subnet=32) -> None:
         self.type = type
         self.seq_num = seq_num
+        self.ip_address = ip_address
+        self.subnet = subnet
         # Meaning that the router is ack the finack request (need the router to not create new connection)
         self.is_fin_ack_respone = is_fin_ack_respone
         pass
