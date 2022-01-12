@@ -69,7 +69,13 @@ class CustomNetwork:
     def _printRouters(self):
         print("\nRouters")
         for i, r in enumerate(self.routers):
-            print(f'{i}: {r.name}')
+            print(f'{i}: {r.name} - {r.ip_address}')
+            print(f'    Connected with:')
+            for l in r.links:
+                print(f'      - {l.name}')
+            print('\n')
+
+
 
     def _printLinks(self):
         print("\nLinks")
