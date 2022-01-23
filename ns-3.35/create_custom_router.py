@@ -14,7 +14,16 @@ def create_custom_router(predefined_name=None, addr=None, subn=None):
     else:
         name = input('Router name:')
         ip_address = input('Ip address:')
+        while (len(ip_address) != (3+1 + 3+1 + 3+1 + 3)):
+            print('Ip address format is not xxx.xxx.xxx.xxx! Please try again!')
+            ip_address = input('Ip address:')
+
         subnet = int(input('Subnet:'))
+        while (subnet < 0 and subnet > 32):
+            print('Subnet has to be between 0 and 32! Please try again!')
+            subnet = int(input('Subnet:'))
+
+
 
     print(bcolors.OKGREEN +
           f'..."{name}" {ip_address}/{subnet} router added to the network!' + bcolors.ENDC)

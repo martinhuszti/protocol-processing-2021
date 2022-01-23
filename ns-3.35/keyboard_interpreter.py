@@ -3,7 +3,7 @@ from bcolors import bcolors
 # Read command from user. Also check the validity of the given number
 def read_command():
     while True:
-        userinput = input('Selected command number then enter:')
+        userinput = input('Select command (8 for help):')
         if not userinput.isdigit():
             print(bcolors.FAIL +
                   "The input is not number! Please try again!" + bcolors.ENDC)

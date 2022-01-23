@@ -17,7 +17,7 @@ class CustomNetwork:
     def get_network_size(self):
         return len(self.routers)
 
-# idx1 and 2 are for testing purposes
+# idx1 and idx2 are for testing purposes
     def add_link(self, idx1=None, idx2=None):
         self._printRouters()
         if(idx1 != None and idx2 != None):
@@ -74,7 +74,6 @@ class CustomNetwork:
             for l in r.links:
                 print(f'      - {l.name}')
             print('\n')
-
 
 
     def _printLinks(self):
