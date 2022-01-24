@@ -24,7 +24,7 @@ user_interface.control_panel()
 
 network.add_router(create_custom_router('Test_router_1',"100.0.0.0",8))
 network.add_router(create_custom_router('Test_router_2',"110.0.0.0",8))
-# network.add_link(0,1)
+network.add_link(0,1)
 # Each router has router table
 # Create suitable IP packets (need header field)
 # Error conditions (router offline, link dropped)

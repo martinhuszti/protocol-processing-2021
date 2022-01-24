@@ -82,10 +82,13 @@ class CustomNetwork:
             print(f'{i}: {pairs[0].name} - {pairs[1].name}')
 
     def send_packet(self):
-        print("Sending packet from router to router:")
+        print("Sending packet from router to router")
+        self.print_network()
         inp = input("Index of the source router:")
-        ip_to = input("Destination IP")
-        if int(inp) or int(inp) > len(inp):
-            router = self.routers[int(inp)]
-            router.send_packet(ip_to,CustomPacket())
+        ip_to = input("Destination Ip address:")
+        if int(inp) >= 0 and int(inp) < len(self.routers):
+            selected_router = self.routers[int(inp)]
+            selected_router.send_packet(CustomPacket(selected_router.ip_address,ip_to))
+        else:
+            print("The selected router index is not valid! Try again!")
             

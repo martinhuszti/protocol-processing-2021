@@ -1,3 +1,4 @@
+from queue import Empty
 from custom_packet import CustomPacket
 from custom_tcp_message import ETCP_MSG_TYPE, CustomTcpMessage
 
@@ -7,8 +8,8 @@ from random import random
 class CustomRouter:
     def __init__(self, name='No name given', ip_address="255.255.255.255", subnet=32):
         self.name = name
-        self.links = [] # the link and the routing table index are matching
-        self.routing_table = [] # Tuple with ip_address and subnet
+        self.links = []  # the link and the routing table index are matching
+        self.routing_table = []  # Tuple with ip_address and subnet
         self.ip_address = ip_address
         self.subnet = subnet
 
@@ -43,7 +44,7 @@ class CustomRouter:
                     _from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
                 self.current_seq_num = 0
                 self.links.append(_from)
-                self.routing_table.append((_from.ip_address,_from.subnet))
+                self.routing_table.append((_from.ip_address, _from.subnet))
 
         if _type == ETCP_MSG_TYPE.ACK:
             if(tcp_message.is_fin_ack_respone == True):
@@ -70,6 +71,24 @@ class CustomRouter:
             self.send_tcp_msg(_from, CustomTcpMessage(
                 type=ETCP_MSG_TYPE.FIN_ACK))
 
-    def send_packet(self, _to, packet: CustomPacket):
+    def send_packet(self, packet: CustomPacket):
+        if(packet.ip_from == self.ip_address):
+            print(f"{self.name}: I'm sending a packet to: {packet.ip_to}")
+        else:
+            print(f"{self.name}: A new packet arrived.")
 
-        pass
+        if packet.ip_to == self.ip_address:
+            print(
+                f"{self.name}: The destionation of the packet is me! It's arrived to the destination! {self.ip_address}")
+            return
+
+        found_router = Empty
+        for link in self.links:
+            if link.ip_address == packet.ip_to:
+                found_router = link
+                break
+            
+        if found_router != Empty:
+            found_router.send_packet(packet)
+        else:
+            print(f"{self.name}: Did not found the target router! I'm sorryyyy")
