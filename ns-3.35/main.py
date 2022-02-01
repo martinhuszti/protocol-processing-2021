@@ -1,12 +1,4 @@
 
-from typing import Match
-
-import ns.applications
-import ns.core
-import ns.dsdv
-import ns.internet
-import ns.network
-import ns.point_to_point
 from custom_network import CustomNetwork
 
 import user_interface
@@ -22,8 +14,8 @@ user_interface.control_panel()
 
 #Tasks to be implemented:
 
-network.add_router(create_custom_router('Test_router_1',"100.0.0.0",8))
-network.add_router(create_custom_router('Test_router_2',"110.0.0.0",8))
+network.add_router(create_custom_router('Test_router_1',"100.0.0.1",8))
+network.add_router(create_custom_router('Test_router_2',"100.0.0.2",8))
 network.add_link(0,1)
 # Each router has router table
 # Create suitable IP packets (need header field)
