@@ -39,7 +39,7 @@ class CustomRouter:
         if _type == ETCP_MSG_TYPE.SYN_ACK:
             if(tcp_message.seq_num == self.current_seq_num):
                 print(
-                    f"{self.name}: The sequence number is correct, initalizing connection")
+                    f"{self.name}: The sequence number is correct, initializing connection")
                 self.send_tcp_msg(
                     _from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
                 self.current_seq_num = 0
@@ -47,7 +47,7 @@ class CustomRouter:
                 self.routing_table.append((_from.ip_address, _from.subnet))
 
         if _type == ETCP_MSG_TYPE.ACK:
-            if(tcp_message.is_fin_ack_respone == True):
+            if(tcp_message.is_fin_ack_response == True):
                 print(
                     f"{self.name}: ACK arrived to the FIN_ACK message. Removing the link...")
                 self.links.remove(_from)
@@ -58,11 +58,11 @@ class CustomRouter:
         if _type == ETCP_MSG_TYPE.FIN_ACK:
             self.links.remove(_from)
             print(
-                f"{self.name}: Sending back ACK awith is_fin_ack_response true flag")
+                f"{self.name}: Sending back ACK with is_fin_ack_response true flag")
             self.send_tcp_msg(
                 _from,
                 CustomTcpMessage(type=ETCP_MSG_TYPE.ACK,
-                                 is_fin_ack_respone=True)
+                                 is_fin_ack_response=True)
             )
 
         if _type == ETCP_MSG_TYPE.FIN:
@@ -79,7 +79,7 @@ class CustomRouter:
 
         if packet.ip_to == self.ip_address:
             print(
-                f"{self.name}: The destionation of the packet is me! It's arrived to the destination! {self.ip_address}")
+                f"{self.name}: The destination of the packet is me! It's arrived to the destination! {self.ip_address}")
             return
 
         found_router = Empty
