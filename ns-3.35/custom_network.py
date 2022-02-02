@@ -17,17 +17,17 @@ class CustomNetwork:
     def get_network_size(self):
         return len(self.routers)
 
-# idx1 and idx2 are for testing purposes
+    # idx1 and idx2 are for testing purposes
     def add_link(self, idx1=None, idx2=None):
         self._printRouters()
-        if(idx1 != None and idx2 != None):
+        if (idx1 != None and idx2 != None):
             first_router_idx = idx1
             second_router_idx = idx2
         else:
             first_router_idx = input('First router index:')
             second_router_idx = input('Second router index:')
 
-        if(int(first_router_idx) >= self.get_network_size() or int(second_router_idx) >= self.get_network_size()):
+        if (int(first_router_idx) >= self.get_network_size() or int(second_router_idx) >= self.get_network_size()):
             print("Invalid indexes... returning")
             pass
         first_router = self.routers[int(first_router_idx)]
@@ -52,15 +52,15 @@ class CustomNetwork:
 
     def remove_router(self):
         self.print_network()
-        sr = input('Which router you want to remove: ')
-        if(sr.isdigit() and int(sr) >= 0 and int(sr) <= len(self.routers)-1):
+        sr = input('Select which router you want to remove: ')
+        if sr.isdigit() and int(sr) >= 0 and int(sr) <= len(self.routers) - 1:
             self.routers.pop(int(sr))
-            print(bcolors.OKGREEN + "The router successfully removed!" + bcolors.ENDC)
+            print(bcolors.OKGREEN + "The router was successfully removed!" + bcolors.ENDC)
         else:
             print(bcolors.FAIL + "The given index is not correct!" + bcolors.ENDC)
 
     def print_network(self):
-        print(bcolors.OKCYAN+"Current network topology:")
+        print(bcolors.OKCYAN + "Current network topology:")
         self._printRouters()
         self._printLinks()
         print_line()
@@ -75,7 +75,6 @@ class CustomNetwork:
                 print(f'      - {l.name}')
             print('\n')
 
-
     def _printLinks(self):
         print("\nLinks")
         for i, pairs in enumerate(self.links):
@@ -85,10 +84,9 @@ class CustomNetwork:
         print("Sending packet from router to router")
         self.print_network()
         inp = input("Index of the source router:")
-        ip_to = input("Destination Ip address:")
+        ip_to = input("Destination Ip address:") #MAYBE WE CAN USE THE INDEX HERE TOO?
         if int(inp) >= 0 and int(inp) < len(self.routers):
             selected_router = self.routers[int(inp)]
-            selected_router.send_packet(CustomPacket(selected_router.ip_address,ip_to))
+            selected_router.send_packet(CustomPacket(selected_router.ip_address, ip_to))
         else:
             print("The selected router index is not valid! Try again!")
-            
