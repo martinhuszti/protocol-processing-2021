@@ -3,18 +3,24 @@ from custom_packet import CustomPacket
 from custom_tcp_message import ETCP_MSG_TYPE, CustomTcpMessage
 
 from random import random
-
+from prettytable import PrettyTable # to print routing tables in a cute way
 
 class CustomRouter:
     def __init__(self, name='No name given', ip_address="255.255.255.255", subnet=32):
         self.name = name
         self.links = []  # the link and the routing table index are matching
-        self.routing_table = []  # Tuple with ip_address and subnet
+        self.routing_table = []  # Tuple with destination ip_address, subnet mask, metric
         self.ip_address = ip_address
         self.subnet = subnet
 
     def print(self):
         print(self.name)
+
+    def print_tables(self):
+        t = PrettyTable(['Destination','Netmask','Metric'])
+        for r in self.routing_table:
+            t.add_row([r[0], r[1], r[2]])
+        print(f'{t}\n')
 
     def send_tcp_msg(self, _to, msg: CustomTcpMessage):
         self.current_seq_num = random()
@@ -44,7 +50,7 @@ class CustomRouter:
                     _from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
                 self.current_seq_num = 0
                 self.links.append(_from)
-                self.routing_table.append((_from.ip_address, _from.subnet))
+                self.routing_table.append((_from.ip_address, _from.subnet, 1)) #1 is the hop -> TO DO: create a better function to determine metrics
 
         if _type == ETCP_MSG_TYPE.ACK:
             if(tcp_message.is_fin_ack_response == True):
@@ -54,6 +60,7 @@ class CustomRouter:
             else:
                 print(f"{self.name}: Initializing connection")
                 self.links.append(_from)
+                self.routing_table.append((_from.ip_address, _from.subnet, 1)) #1 is the hop -> TO DO: create a better function to determine metrics
 
         if _type == ETCP_MSG_TYPE.FIN_ACK:
             self.links.remove(_from)
