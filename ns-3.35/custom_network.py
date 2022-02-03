@@ -3,7 +3,6 @@ from bcolors import bcolors
 from custom_packet import CustomPacket
 from custom_router import CustomRouter
 from custom_tcp_message import ETCP_MSG_TYPE, CustomTcpMessage
-from user_interface import print_line
 
 
 class CustomNetwork:
@@ -29,13 +28,14 @@ class CustomNetwork:
 
         if (int(first_router_idx) >= self.get_network_size() or int(second_router_idx) >= self.get_network_size()):
             print("Invalid indexes... returning")
-            pass
-        first_router = self.routers[int(first_router_idx)]
-        second_router = self.routers[int(second_router_idx)]
-        first_router.send_tcp_msg(
-            _to=second_router, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.SYN))
-        self.links.append((first_router, second_router))
-        print('Link created between the two router')
+            return
+        else:
+            first_router = self.routers[int(first_router_idx)]
+            second_router = self.routers[int(second_router_idx)]
+            first_router.send_tcp_msg(
+                _to=second_router, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.SYN))
+            self.links.append((first_router, second_router))
+            print('Link created between the two router')
 
     def remove_link(self):
         self._printLinks()
@@ -63,7 +63,7 @@ class CustomNetwork:
         print(bcolors.OKCYAN + "Current network topology:")
         self._printRouters()
         self._printLinks()
-        print_line()
+        self._printTables()
         print(bcolors.ENDC)
 
     def _printRouters(self):
@@ -72,13 +72,18 @@ class CustomNetwork:
             print(f'{i}: {r.name} - {r.ip_address}')
             print(f'    Connected with:')
             for l in r.links:
-                print(f'      - {l.name}')
-            print('\n')
+                print(f'      - {l.name}\n')
 
     def _printLinks(self):
         print("\nLinks")
         for i, pairs in enumerate(self.links):
-            print(f'{i}: {pairs[0].name} - {pairs[1].name}')
+            print(f'{i}: {pairs[0].name} - {pairs[1].name}\n')
+
+    def _printTables(self):
+        print("\nRouting Tables")
+        for i, r in enumerate(self.routers):
+            print(f'{r.name} - {r.ip_address}')
+            r.print_tables()
 
     def send_packet(self):
         print("Sending packet from router to router")
