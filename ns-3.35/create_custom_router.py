@@ -7,7 +7,7 @@ import re  # to check input syntax
 # Predefined name is for testing purposes. If it is given we do not ask the name from the user
 def create_custom_router(predefined_name=None, addr=None, subn=None):
     print('Generating new router...')
-    if predefined_name != None and addr != None and subn != None:
+    if predefined_name is not None and addr is not None and subn is not None:
         name = predefined_name
         ip_address = addr
         subnet = subn
@@ -22,22 +22,28 @@ def create_custom_router(predefined_name=None, addr=None, subn=None):
 
         while valid_address == 0:
             if len(ip_address) < 7:
-                print(bcolors.FAIL + 'IP address is too short! Please try again!' + bcolors.ENDC)
-
+                print(bcolors.WARNING + 'IP address is too short! Please try again!' + bcolors.ENDC)
+            # we can remove the check on the length if you want, the other one is enough to prevent wrong inputs
             elif len(ip_address) > 15:
-                print(bcolors.FAIL + 'IP address is too long! Please try again!' + bcolors.ENDC)
+                print(bcolors.WARNING + 'IP address is too long! Please try again!' + bcolors.ENDC)
 
             elif checkIP.match(ip_address):  # check if user inserted valid characters
-                if ip_address.count(".") == 3:  # check number of dots (otherwise an IP like 1.2.3.4.5 was valid)
-                    print(bcolors.OKGREEN + 'The IP you inserted is correct!' + bcolors.ENDC)
-                    # TO DO: check if the inserted IP already exist!
-                    valid_address = 1
-                    continue
+                if ip_address.count(".") != 3:  # check number of dots (otherwise an IP like 1.2.3.4.5 was valid)
+                    print(bcolors.WARNING + 'You inserted too many dots! Use only 3! ' + bcolors.OKBLUE +
+                          'Example: 1.2.3.4' + bcolors.ENDC)
                 else:
-                    print(bcolors.FAIL + 'You inserted too many dots! Use only 3! xxx.xxx.xxx.xxx' + bcolors.ENDC)
+                    octets = ip_address.split(".")  # split the IP in different subsection i.e.['1','2','3','4']
+                    error = False
+                    for part in octets:  # check if the value in each part is valid
+                        if not 0 <= int(part) <= 255:
+                            print(bcolors.WARNING + 'You inserted an invalid IP!' + bcolors.ENDC)
+                            error = True
+                            break
+                    if not error:
+                        valid_address = 1  # the IP is valid, we can exit from the loop
             else:
-                print(bcolors.FAIL + 'You inserted wrong characters!' +bcolors.ENDC + bcolors.OKBLUE +
-                      '\nUse only numbers and the dot (.) between them!' + bcolors.ENDC)
+                print(bcolors.WARNING + 'You inserted wrong characters!'
+                                        '\nUse only numbers and the dot (.) between them!' + bcolors.ENDC)
                 print(bcolors.OKBLUE + 'Examples: 1.1.1.1 or 10.100.10.100' + bcolors.ENDC)
 
             ip_address = input('Ip address:')
@@ -51,16 +57,14 @@ def create_custom_router(predefined_name=None, addr=None, subn=None):
             if checkNet.match(subnet):  # if the user inserted numbers
                 subnet = int(subnet)  # we convert the string to int
                 if subnet < 0 or subnet > 32:  # and check the length
-                    print(bcolors.OKBLUE + 'Subnet has to be between 0 and 32! Please try again!' + bcolors.ENDC)
+                    print(bcolors.WARNING + 'Subnet has to be between 0 and 32! Please try again!' + bcolors.ENDC)
                 else:
-                    print(bcolors.OKGREEN + 'Well done' + bcolors.ENDC)
+                    # print(bcolors.OKGREEN + 'Well done' + bcolors.ENDC)
                     valid_subnet = 1
                     continue
             else:
-                print(bcolors.FAIL + 'Use only numbers!' + bcolors.ENDC)
+                print(bcolors.WARNING + 'Use only numbers!' + bcolors.ENDC)
 
             subnet = input('Subnet:')
 
-    print(bcolors.OKGREEN +
-          f'..."{name}" {ip_address}/{subnet} router added to the network!' + bcolors.ENDC)
     return CustomRouter(name, ip_address, subnet)
