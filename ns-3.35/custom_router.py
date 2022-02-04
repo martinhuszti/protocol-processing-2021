@@ -11,7 +11,7 @@ class CustomRouter:
     def __init__(self, name='No name given', ip_address="255.255.255.255", subnet=32):
         self.name = name
         self.links = []  # the link and the routing table index are matching
-        self.routing_table = []  # Tuple with destination ip_address, subnet mask, metric
+        self.routing_table = []  # Tuple with destination ip_address, gateway, subnet mask, metric
         self.ip_address = ip_address
         self.subnet = subnet
 
@@ -19,12 +19,12 @@ class CustomRouter:
         print(self.name)
 
     def print_tables(self):
-        t = PrettyTable(['Destination', 'Netmask', 'Metric'])
+        t = PrettyTable(['Destination', 'Gateway', 'Netmask', 'Metric'])
         if not self.routing_table:
             print('This table is currently empty!')
             return
         for r in self.routing_table:
-            t.add_row([r[0], r[1], r[2]])
+            t.add_row([r[0], r[1], r[2], r[3]])
         print(t)
 
     def send_tcp_msg(self, _to, msg: CustomTcpMessage):
@@ -56,8 +56,9 @@ class CustomRouter:
                     _from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
                 self.current_seq_num = 0
                 self.links.append(_from)
-                self.routing_table.append((_from.ip_address, _from.subnet, 1))  # 1 is the hop ->
+                self.routing_table.append((_from.ip_address, _from.ip_address, _from.subnet, 1))  # 1 is the hop
                 # TO DO: create a better function to determine metrics
+                # TO DO: make a router figure out what is the gateway for a certain destination
 
         if _type == ETCP_MSG_TYPE.ACK:
             if tcp_message.is_fin_ack_response:
@@ -67,7 +68,7 @@ class CustomRouter:
             else:
                 print(f"{self.name}: Initializing connection")
                 self.links.append(_from)
-                self.routing_table.append((_from.ip_address, _from.subnet, 1))  # 1 is the hop ->
+                self.routing_table.append((_from.ip_address, _from.ip_address, _from.subnet, 1))  # 1 is the hop ->
                 # TO DO: create a better function to determine metrics
 
         if _type == ETCP_MSG_TYPE.FIN_ACK:
