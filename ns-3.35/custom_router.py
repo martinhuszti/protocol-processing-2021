@@ -57,8 +57,8 @@ class CustomRouter:
                 self.current_seq_num = 0
                 self.links.append(_from)
                 self.routing_table.append((_from.ip_address, _from.ip_address, _from.subnet, 1))  # 1 is the hop
-                # TO DO: create a better function to determine metrics
-                # TO DO: make a router figure out what is the gateway for a certain destination
+                # TODO: create a better function to determine metrics
+                # TODO: make a router figure out what is the gateway for a certain destination
 
         if _type == ETCP_MSG_TYPE.ACK:
             if tcp_message.is_fin_ack_response:
@@ -68,8 +68,8 @@ class CustomRouter:
             else:
                 print(f"{self.name}: Initializing connection")
                 self.links.append(_from)
-                self.routing_table.append((_from.ip_address, _from.ip_address, _from.subnet, 1))  # 1 is the hop ->
-                # TO DO: create a better function to determine metrics
+                self.routing_table.append((_from.ip_address, _from.ip_address, _from.subnet, 1))  # 1 is the hop
+                # TODO: create a better function to determine metrics
 
         if _type == ETCP_MSG_TYPE.FIN_ACK:
             self.links.remove(_from)
