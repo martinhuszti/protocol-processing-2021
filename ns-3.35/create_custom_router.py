@@ -33,20 +33,21 @@ def create_custom_router(predefined_name=None, addr=None, subn=None):
                           'Example: 1.2.3.4' + bcolors.ENDC)
                 else:
                     octets = ip_address.split(".")  # split the IP in different subsection i.e.['1','2','3','4']
-                    error = False
+
                     for part in octets:  # check if the value in each part is valid
                         if not 0 <= int(part) <= 255:
                             print(bcolors.WARNING + 'You inserted an invalid IP!' + bcolors.ENDC)
-                            error = True
+                            valid_address = 0
                             break
-                    if not error:
-                        valid_address = 1  # the IP is valid, we can exit from the loop
+                        else:
+                            valid_address = 1
             else:
                 print(bcolors.WARNING + 'You inserted wrong characters!'
                                         '\nUse only numbers and the dot (.) between them!' + bcolors.ENDC)
                 print(bcolors.OKBLUE + 'Examples: 1.1.1.1 or 10.100.10.100' + bcolors.ENDC)
 
-            ip_address = input('Ip address:')
+            if valid_address != 1:
+                ip_address = input('Ip address:')
 
         # user inserts the subnet
         subnet = input('Subnet:')
