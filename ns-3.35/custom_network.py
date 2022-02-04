@@ -43,17 +43,37 @@ class CustomNetwork:
         else:
             first_router_idx = input('First router index:')
             second_router_idx = input('Second router index:')
+            if second_router_idx.isdigit() and first_router_idx.isdigit():  # prevents crash if user types a letter
+                if int(first_router_idx) >= self.get_network_size() or int(second_router_idx) >= self.get_network_size():
+                    print(bcolors.FAIL + "Invalid indexes... returning" + bcolors.ENDC)
+                    return
+                elif first_router_idx == second_router_idx:
+                    print(bcolors.WARNING + 'A router cannot create a link with itself!' + bcolors.ENDC)
+                    return
+            else:
+                print(bcolors.FAIL + "Invalid indexes... returning" + bcolors.ENDC)
+                return
 
-        if int(first_router_idx) >= self.get_network_size() or int(second_router_idx) >= self.get_network_size():
-            print(bcolors.FAIL + "Invalid indexes... returning" + bcolors.ENDC)
-            return
-        else:
-            first_router = self.routers[int(first_router_idx)]
-            second_router = self.routers[int(second_router_idx)]
-            first_router.send_tcp_msg(
-                _to=second_router, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.SYN))
-            self.links.append((first_router, second_router))
-            print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
+        first_router = self.routers[int(first_router_idx)]
+        second_router = self.routers[int(second_router_idx)]
+        for pairs in self.links:
+            if (pairs[0].ip_address == first_router.ip_address and pairs[1].ip_address == second_router.ip_address) or (pairs[0].ip_address == second_router.ip_address and pairs[1].ip_address == first_router.ip_address):
+                ask = input('There already exists a link between these two routers, do you want to create a backup one? (y/n) ')
+                if ask == 'y':
+                    print(bcolors.WARNING + 'This content is under development!' + bcolors.ENDC)
+                    # After having decided on a proper metric system we can add this :)
+                    return
+                elif ask == 'n':
+                    print('Returning to main menu...')
+                    return
+                else:
+                    print(bcolors.FAIL + "Invalid option!" + bcolors.ENDC)
+                    return
+
+        first_router.send_tcp_msg(
+            _to=second_router, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.SYN))
+        self.links.append((first_router, second_router))
+        print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
 
     def remove_link(self):
         if not self.links:
@@ -91,7 +111,7 @@ class CustomNetwork:
         print(bcolors.OKCYAN)
         self._printRouters()
         print(bcolors.ENDC)
-        # TO DO: when removing a router, delete its links to other routers and the rows in the routing table
+        # TODO: when removing a router, delete its links to other routers and the rows in the routing table
         sr = input('Select which router you want to remove (press a letter to exit): ')
         if sr.isdigit() and int(sr) >= 0 and int(sr) <= len(self.routers) - 1:
             self.routers.pop(int(sr))
