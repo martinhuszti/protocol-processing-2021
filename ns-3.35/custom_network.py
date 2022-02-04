@@ -12,7 +12,19 @@ class CustomNetwork:
         self.links = []
 
     def add_router(self, new_router):
-        self.routers.append(new_router)
+        if self.unique_IP(new_router):
+            self.routers.append(new_router)
+            print(bcolors.OKGREEN +
+                  f'The router "{new_router.name}" - {new_router.ip_address}/{new_router.subnet} '
+                  f'was added to the network!' + bcolors.ENDC)
+        else:
+            print(bcolors.FAIL + 'Error! There is already a router with the same IP in the network!' + bcolors.ENDC)
+
+    def unique_IP(self, new_router):  # check if the IP of a new router has already been used
+        for i in self.routers:
+            if i.ip_address == new_router.ip_address:
+                return False
+        return True
 
     def get_network_size(self):
         return len(self.routers)
