@@ -44,7 +44,7 @@ while True:
         network.send_packet()
         continue
     if sc == 7:
-        print('It does nothing!')
+        network.update_link_cost()
         continue
     if sc == 8:
         user_interface.control_panel()

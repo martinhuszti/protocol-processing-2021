@@ -8,16 +8,16 @@ from prettytable import PrettyTable  # to print routing tables in a cute way
 
 
 class CustomRouter:
-    def __init__(self, name='No name given', ip_address="255.255.255.255", subnet=32):
-        self.name = name
+    def __init__(self, AS_id='No AS_id given', ip_address="255.255.255.255", subnet=32):
+        self.AS_id = AS_id
         self.routing_table = []  # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost
-        self.neighbor_table = [] # List of dictionaries with AS_id, ip_address, cost
+        self.neighbor_table = [] # List of dictionaries with AS_id, ip_address, cost, reference
         self.bgp_table = [] # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost
         self.ip_address = ip_address
         self.subnet = subnet
 
     def print(self):
-        print(self.name)
+        print(self.AS_id)
 
     ############################
     #TODO UPDATE WITH THE NEW STRUCTURE
@@ -31,22 +31,24 @@ class CustomRouter:
             t.add_row([r[0], r[1], r[2], r[3]])
         print(t)
 
+    ########################
+
     def send_tcp_msg(self, _to, msg: CustomTcpMessage):
         self.current_seq_num = random()
         # If syn, generate seq number otherwise it is containing already
         if msg.type == ETCP_MSG_TYPE.SYN or msg.type == ETCP_MSG_TYPE.FIN:
             msg.seq_num = self.current_seq_num
-            print(f'{self.name}: sending {msg.type.name} message to {_to.name}')
+            print(f'{self.AS_id}: sending {msg.type.name} message to {_to.AS_id}')
         # Simulate that the message is arrived to the router
         _to.receive_tcp_msg(self, msg)
 
     def receive_tcp_msg(self, _from, tcp_message: CustomTcpMessage):
-        print(f'{self.name}: TCP message arrived: {tcp_message.type.name}')
+        print(f'{self.AS_id}: TCP message arrived: {tcp_message.type.name}')
         _type = tcp_message.type
 
         # 1. Start with SYN
         if _type == ETCP_MSG_TYPE.SYN:
-            print(f'{self.name}: sending back syn-ack with ')
+            print(f'{self.AS_id}: sending back syn-ack with ')
             self.send_tcp_msg(_to=_from, msg=CustomTcpMessage(
                 type=ETCP_MSG_TYPE.SYN_ACK, seq_num=tcp_message.seq_num, ip_address=self.ip_address,
                 subnet=self.subnet))
@@ -54,31 +56,24 @@ class CustomRouter:
         # 2. Answer with SYN-ACK and send the ip range
         if _type == ETCP_MSG_TYPE.SYN_ACK:
             if tcp_message.seq_num == self.current_seq_num:
-                print(
-                    f"{self.name}: The sequence number is correct, initializing connection")
-                self.send_tcp_msg(
-                    _from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
+                print(f"{self.AS_id}: The sequence number is correct, initializing connection")
+                self.send_tcp_msg(_from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
                 self.current_seq_num = 0
-                self.links.append(_from)
-                self.routing_table.append((_from.ip_address, _from.ip_address, _from.subnet, 1))  # 1 is the hop
+                self.set_neighbor(self, _from, 1)
                 # TODO: create a better function to determine metrics
-                # TODO: make a router figure out what is the next_hop for a certain destination
 
         if _type == ETCP_MSG_TYPE.ACK:
             if tcp_message.is_fin_ack_response:
                 print(
-                    f"{self.name}: ACK arrived to the FIN_ACK message. Removing the link...")
-                self.links.remove(_from)
+                    f"{self.AS_id}: ACK arrived to the FIN_ACK message. Removing the link...")
             else:
-                print(f"{self.name}: Initializing connection")
-                self.links.append(_from)
-                self.routing_table.append((_from.ip_address, _from.ip_address, _from.subnet, 1))  # 1 is the hop
+                print(f"{self.AS_id}: Initializing connection")
+                self.set_neighbor(self, _from, 1)
                 # TODO: create a better function to determine metrics
 
         if _type == ETCP_MSG_TYPE.FIN_ACK:
-            self.links.remove(_from)
             print(
-                f"{self.name}: Sending back ACK with is_fin_ack_response true flag")
+                f"{self.AS_id}: Sending back ACK with is_fin_ack_response true flag")
             self.send_tcp_msg(
                 _from,
                 CustomTcpMessage(type=ETCP_MSG_TYPE.ACK,
@@ -87,40 +82,38 @@ class CustomRouter:
 
         if _type == ETCP_MSG_TYPE.FIN:
             # Only if ACK arrives remove from the list
-            print(f"{self.name}: Sending back FIN_ACK")
+            print(f"{self.AS_id}: Sending back FIN_ACK")
             self.send_tcp_msg(_from, CustomTcpMessage(
                 type=ETCP_MSG_TYPE.FIN_ACK))
 
-    ########################
-
     def send_packet(self, packet: CustomPacket):
         if packet.ip_from == self.ip_address:
-            print(f"{self.name}: I'm sending a packet to: {packet.ip_to}")
+            print(f"{self.AS_id}: I'm sending a packet to: {packet.ip_to}")
         else:
-            print(f"{self.name}: A new packet arrived.")
+            print(f"{self.AS_id}: A new packet arrived.")
 
         if packet.ip_to == self.ip_address:
             print(
-                f"{self.name}:" + bcolors.OKGREEN +
+                f"{self.AS_id}:" + bcolors.OKGREEN +
                 f" I am the destination of the packet! It's arrived to the destination! {self.ip_address}"
                 + bcolors.ENDC)
             return
 
         found_router = self.select_next_hop(packet.ip_to)
-        if 'Error' in found_router:
-            print(found_router)
+        if found_router:
+            found_router.reference.send_packet(packet)
         else:
-            found_router.send_packet(packet)
+            print(f'{bcolors.FAIL}Error: no possible route found{bcolors.ENDC}')
 
-    def set_neighbor(self, AS_id, ip_address, cost):
+    def set_neighbor(self, neighbor, cost):
         tmp = False
         for _as in self.neighbor_table:
-            if _as['AS_id'] == AS_id:
-                _as['cost'] == cost
+            if _as['AS_id'] == neighbor.AS_id:
+                _as['cost'] = cost
                 tmp = True
                 break
         if not tmp:
-            self.neighbor_table.append({'AS_id': AS_id, 'ip_address': ip_address, 'cost': cost})
+            self.neighbor_table.append({'AS_id': neighbor.AS_id, 'ip_address': neighbor.ip_address, 'cost': cost})
 
     def select_next_hop(self, ip_address):
         for neighbor in self.neighbor_table:
@@ -128,8 +121,10 @@ class CustomRouter:
                 return neighbor
         for elem in self.routing_table:
             if ipaddress.ip_address(ip_address) in ipaddress.ip_network(f"{elem['destination_network']}/{elem['subnet_mask']}"):
-                return elem
-        return f'{bcolors.FAIL}Error: no possible route found{bcolors.ENDC}'
+                for neighbor in self.neighbor_table:
+                    if elem['next_hop'] == neighbor['ip_address']:
+                        return neighbor
+        return None 
 
     def update_routing_table(self, network, subnet_mask, AS_path, next_hop, cost):
         tmp = False

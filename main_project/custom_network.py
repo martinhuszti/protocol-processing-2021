@@ -172,3 +172,7 @@ class CustomNetwork:
             selected_router.send_packet(CustomPacket(selected_router.ip_address, ip_to))
         else:
             print(bcolors.FAIL + "The selected router index is not valid! Try again!" + bcolors.ENDC)
+
+    def update_link_cost(self):
+        #TODO using router.set_neighbor()
+        pass
