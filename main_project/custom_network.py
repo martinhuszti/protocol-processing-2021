@@ -15,7 +15,7 @@ class CustomNetwork:
         if self.unique_IP(new_router):
             self.routers.append(new_router)
             print(bcolors.OKGREEN +
-                  f'The router "{new_router.name}" - {new_router.ip_address}/{new_router.subnet} '
+                  f'The router "{new_router.AS_id}" - {new_router.ip_address}/{new_router.subnet} '
                   f'was added to the network!' + bcolors.ENDC)
         else:
             print(bcolors.FAIL + 'Error! There is already a router with the same IP in the network!' + bcolors.ENDC)
@@ -132,13 +132,13 @@ class CustomNetwork:
             print("There are no routers, add one by selecting command 2!\n\n")
             return
         for i, r in enumerate(self.routers):
-            print(f'\n{i}: {r.name} - {r.ip_address}')
-            if not r.links:
+            print(f'\n{i}: {r.AS_id} - {r.ip_address}')
+            if not r.neighbor_table:
                 continue
             else:
                 print(f'   Connected with:')
-                for l in r.links:
-                    print(f'     - {l.name}')
+                for l in r.neighbor_table:
+                    print(f'     - {l["AS_id"]}')
         print('\n')
 
     def _printLinks(self):
@@ -147,7 +147,7 @@ class CustomNetwork:
             print("There are no links, create one by selecting command 4!\n\n")
             return
         for i, pairs in enumerate(self.links):
-            print(f'{i}: {pairs[0].name} - {pairs[1].name}')
+            print(f'{i}: {pairs[0].AS_id} - {pairs[1].AS_id}')
         print('\n')
 
     def _printTables(self):
@@ -156,7 +156,7 @@ class CustomNetwork:
             print("Without routers there can be none of these!\n")
             return
         for i, r in enumerate(self.routers):
-            print(f'\n{r.name} - {r.ip_address}')
+            print(f'\n{r.AS_id} - {r.ip_address}')
             r.print_tables()
 
     def send_packet(self):

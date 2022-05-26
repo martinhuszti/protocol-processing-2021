@@ -59,7 +59,7 @@ class CustomRouter:
                 print(f"{self.AS_id}: The sequence number is correct, initializing connection")
                 self.send_tcp_msg(_from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
                 self.current_seq_num = 0
-                self.set_neighbor(self, _from, 1)
+                self.set_neighbor(_from, 1)
                 # TODO: create a better function to determine metrics
 
         if _type == ETCP_MSG_TYPE.ACK:
@@ -68,7 +68,7 @@ class CustomRouter:
                     f"{self.AS_id}: ACK arrived to the FIN_ACK message. Removing the link...")
             else:
                 print(f"{self.AS_id}: Initializing connection")
-                self.set_neighbor(self, _from, 1)
+                self.set_neighbor(_from, 1)
                 # TODO: create a better function to determine metrics
 
         if _type == ETCP_MSG_TYPE.FIN_ACK:
