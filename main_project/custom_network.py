@@ -71,7 +71,7 @@ class CustomNetwork:
                     return
 
         first_router.send_tcp_msg(
-            _to=second_router, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.SYN))
+            _to=second_router, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.SYN)) #TODO Substitute with set_neighbor
         self.links.append((first_router, second_router))
         print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
 
@@ -97,7 +97,7 @@ class CustomNetwork:
                 router1: CustomRouter = selected_link[0]
                 router2: CustomRouter = selected_link[1]
                 router1.send_tcp_msg(
-                    _to=router2, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.FIN))
+                    _to=router2, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.FIN)) #TODO Substitute with remove_neighbor
                 self.links.pop(int(selected_idx))
                 print(bcolors.OKGREEN + 'Link successfully removed!' + bcolors.ENDC)
         else:

@@ -115,6 +115,8 @@ class CustomRouter:
         if not tmp:
             self.neighbor_table.append({'AS_id': neighbor.AS_id, 'ip_address': neighbor.ip_address, 'cost': cost})
 
+    #TODO remove_neighbor(...)
+
     def select_next_hop(self, ip_address):
         for neighbor in self.neighbor_table:
             if ip_address == neighbor['ip_address']:
@@ -162,3 +164,5 @@ class CustomRouter:
                 self.routing_table[pos]['cost'] = cost
                 self.routing_table[pos]['next_hop'] = next_hop
                 self.routing_table[pos]['AS_path'] = AS_path
+
+        
