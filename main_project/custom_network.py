@@ -1,3 +1,4 @@
+from os import remove
 from typing import List
 from bcolors import bcolors
 from custom_packet import CustomPacket
@@ -38,26 +39,26 @@ class CustomNetwork:
             return
 
         if idx1 != None and idx2 != None:
-            first_router_idx = idx1
-            second_router_idx = idx2
+            router1_idx = idx1
+            router2_idx = idx2
         else:
-            first_router_idx = input('First router index:')
-            second_router_idx = input('Second router index:')
-            if second_router_idx.isdigit() and first_router_idx.isdigit():  # prevents crash if user types a letter
-                if int(first_router_idx) >= self.get_network_size() or int(second_router_idx) >= self.get_network_size():
+            router1_idx = input('First router index:')
+            router2_idx = input('Second router index:')
+            if router2_idx.isdigit() and router1_idx.isdigit():  # prevents crash if user types a letter
+                if int(router1_idx) >= self.get_network_size() or int(router2_idx) >= self.get_network_size():
                     print(bcolors.FAIL + "Invalid indexes... returning" + bcolors.ENDC)
                     return
-                elif first_router_idx == second_router_idx:
+                elif router1_idx == router2_idx:
                     print(bcolors.WARNING + 'A router cannot create a link with itself!' + bcolors.ENDC)
                     return
             else:
                 print(bcolors.FAIL + "Invalid indexes... returning" + bcolors.ENDC)
                 return
 
-        first_router = self.routers[int(first_router_idx)]
-        second_router = self.routers[int(second_router_idx)]
+        router1 = self.routers[int(router1_idx)]
+        router2 = self.routers[int(router2_idx)]
         for pairs in self.links:
-            if (pairs[0].ip_address == first_router.ip_address and pairs[1].ip_address == second_router.ip_address) or (pairs[0].ip_address == second_router.ip_address and pairs[1].ip_address == first_router.ip_address):
+            if (pairs[0].ip_address == router1.ip_address and pairs[1].ip_address == router2.ip_address) or (pairs[0].ip_address == router2.ip_address and pairs[1].ip_address == router1.ip_address):
                 ask = input('There already exists a link between these two routers, do you want to create a backup one? (y/n) ')
                 if ask == 'y':
                     print(bcolors.WARNING + 'This content is under development!' + bcolors.ENDC)
@@ -70,9 +71,9 @@ class CustomNetwork:
                     print(bcolors.FAIL + "Invalid option!" + bcolors.ENDC)
                     return
 
-        first_router.send_tcp_msg(
-            _to=second_router, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.SYN)) #TODO Substitute with set_neighbor
-        self.links.append((first_router, second_router))
+        router1.set_neighbor(router2, 1)
+        router2.set_neighbor(router1, 1)
+        self.links.append((router1, router2))
         print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
 
     def remove_link(self):
@@ -96,8 +97,8 @@ class CustomNetwork:
                 selected_link = self.links[int(selected_idx)]
                 router1: CustomRouter = selected_link[0]
                 router2: CustomRouter = selected_link[1]
-                router1.send_tcp_msg(
-                    _to=router2, msg=CustomTcpMessage(type=ETCP_MSG_TYPE.FIN)) #TODO Substitute with remove_neighbor
+                router1.remove_neighbor(router2)
+                router2.remove_neighbor(router1)
                 self.links.pop(int(selected_idx))
                 print(bcolors.OKGREEN + 'Link successfully removed!' + bcolors.ENDC)
         else:
@@ -111,10 +112,18 @@ class CustomNetwork:
         print(bcolors.OKCYAN)
         self._printRouters()
         print(bcolors.ENDC)
-        # TODO: when removing a router, delete its links to other routers and the rows in the routing table
+        # TODO: when removing a router, (delete its links to other routers -> DONE) and the rows in the routing table -> I think that rows from routing table must be managed by BGP messages after the router understood its neigbor died
         sr = input('Select which router you want to remove (press a letter to exit): ')
         if sr.isdigit() and int(sr) >= 0 and int(sr) <= len(self.routers) - 1:
-            self.routers.pop(int(sr))
+            removed_router = self.routers.pop(int(sr))
+            for link in self.links:
+                if removed_router in link:
+                    router1: CustomRouter = link[0]
+                    router2: CustomRouter = link[1]
+                    router1.remove_neighbor(router2)
+                    router2.remove_neighbor(router1)
+                    self.links.remove(link)
+                    
             print(bcolors.OKGREEN + "The router was successfully removed!" + bcolors.ENDC)
         else:
             print(bcolors.FAIL + "The given index is not correct!" + bcolors.ENDC)
@@ -174,5 +183,35 @@ class CustomNetwork:
             print(bcolors.FAIL + "The selected router index is not valid! Try again!" + bcolors.ENDC)
 
     def update_link_cost(self):
-        #TODO using router.set_neighbor()
-        pass
+        if not self.links:
+            print('There are no more links to remove!')
+            return
+
+        print(bcolors.OKCYAN)
+        self._printLinks()
+        print(bcolors.ENDC)
+        selected_idx = input('Link to update: ')
+
+        checkIdx = re.compile(r'\d(\d)?')  # allow only decimals
+        if checkIdx.match(selected_idx):  # if the user inserted numbers
+            selected_idx = int(selected_idx)  # we convert the string to int
+
+            if selected_idx >= len(self.links):
+                print(bcolors.FAIL + 'Wrong index!' + bcolors.ENDC)
+                return
+            else:
+                selected_link = self.links[int(selected_idx)]
+                router1: CustomRouter = selected_link[0]
+                router2: CustomRouter = selected_link[1]
+                new_cost = input('Insert the new cost of the link: ')
+                if checkIdx.match(new_cost):  # if the user inserted numbers
+                    new_cost = int(new_cost)  # we convert the string to int
+                    router1.set_neighbor(router2, new_cost)
+                    router2.set_neighbor(router1, new_cost)
+                else:
+                    print(bcolors.FAIL + 'Insert only numbers!' + bcolors.ENDC)
+                    return
+        else:
+            print(bcolors.FAIL + 'Insert only numbers!' + bcolors.ENDC)
+            return
+

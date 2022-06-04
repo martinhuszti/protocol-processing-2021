@@ -11,7 +11,7 @@ class CustomRouter:
     def __init__(self, AS_id='No AS_id given', ip_address="255.255.255.255", subnet=32):
         self.AS_id = AS_id
         self.routing_table = []  # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost
-        self.neighbor_table = [] # List of dictionaries with AS_id, ip_address, cost, reference
+        self.neighbor_table = [] # List of dictionaries with AS_id, ip_address, cost
         self.bgp_table = [] # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost
         self.ip_address = ip_address
         self.subnet = subnet
@@ -107,15 +107,18 @@ class CustomRouter:
 
     def set_neighbor(self, neighbor, cost):
         tmp = False
-        for _as in self.neighbor_table:
-            if _as['AS_id'] == neighbor.AS_id:
-                _as['cost'] = cost
+        for entry in self.neighbor_table:
+            if entry['ip_address'] == neighbor.ip_address:
+                entry['cost'] = cost
                 tmp = True
                 break
         if not tmp:
             self.neighbor_table.append({'AS_id': neighbor.AS_id, 'ip_address': neighbor.ip_address, 'cost': cost})
 
-    #TODO remove_neighbor(...)
+    def remove_neighbor(self, neighbor):
+        for entry in self.neighbor_table:
+            if entry['ip_address'] == neighbor.ip_address:
+                self.neighbor_table.remove(entry)
 
     def select_next_hop(self, ip_address):
         for neighbor in self.neighbor_table:
@@ -131,8 +134,8 @@ class CustomRouter:
     def update_routing_table(self, network, subnet_mask, AS_path, next_hop, cost):
         tmp = False
         for neighbor in self.neighbor_table:
-            if next_hop == neighbor[1]: 
-                cost += neighbor[2]
+            if next_hop == neighbor['ip_address']: 
+                cost += neighbor['cost']
                 tmp = True
                 break
         if not tmp:
