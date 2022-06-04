@@ -25,6 +25,7 @@ def control_panel():
     print("- 4. Add link")
     print("- 5. Remove link")
     print("- 6. Send packet from router to router")
+    print("- 7. Update link cost")
     print("- 8. Show commands\n")
     print("- 9. Exit\n")
 

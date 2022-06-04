@@ -208,6 +208,7 @@ class CustomNetwork:
                     new_cost = int(new_cost)  # we convert the string to int
                     router1.set_neighbor(router2, new_cost)
                     router2.set_neighbor(router1, new_cost)
+                    print(bcolors.OKGREEN + "The link cost was successfully update!" + bcolors.ENDC)
                 else:
                     print(bcolors.FAIL + 'Insert only numbers!' + bcolors.ENDC)
                     return
