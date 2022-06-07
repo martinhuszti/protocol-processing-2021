@@ -11,7 +11,7 @@ def read_command():
             continue
 
         userinput_num = int(userinput)
-        if userinput_num < 1 or userinput_num > 9:
+        if userinput_num < 1 or userinput_num > 10:
             print(
                 bcolors.FAIL + "The selected command is out of range! Please try again!" + bcolors.ENDC)
             continue

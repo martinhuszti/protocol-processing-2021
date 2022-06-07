@@ -3,6 +3,7 @@ from custom_network import CustomNetwork
 import user_interface
 from create_custom_router import create_custom_router
 from keyboard_interpreter import read_command
+from simulation import start_simulation
 
 network = CustomNetwork()
 
@@ -13,9 +14,6 @@ user_interface.control_panel()
 
 # Tasks to be implemented:
 
-network.add_router(create_custom_router('Test_router_1', "100.0.0.1", 8))
-network.add_router(create_custom_router('Test_router_2', "100.0.0.2", 8))
-network.add_link(0, 1)
 # Each router has router table
 # Create suitable IP packets (need header field)
 # Error conditions (router offline, link dropped)
@@ -50,6 +48,8 @@ while True:
         user_interface.control_panel()
         continue
     if sc == 9:
+        network = start_simulation()
+    if sc == 10:
         break
 
 user_interface.goodbye()
