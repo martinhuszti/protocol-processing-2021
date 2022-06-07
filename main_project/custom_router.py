@@ -1,19 +1,28 @@
 from queue import Empty
+import time
 from custom_packet import CustomPacket
 from custom_tcp_message import ETCP_MSG_TYPE, CustomTcpMessage
 from bcolors import bcolors
-
+import threading
 from random import random
-from prettytable import PrettyTable  # to print routing tables in a cute way
+from prettytable import PrettyTable
+
+from custom_bgp_message import BGP_MSG_TYPE, KeepAliveBgpMessage, OpenBgpMessage, UpdateBgpMessage  # to print routing tables in a cute way
 
 
 class CustomRouter:
+
     def __init__(self, name='No name given', ip_address="255.255.255.255", subnet=32):
         self.name = name
         self.links = []  # the link and the routing table index are matching
         self.routing_table = []  # Tuple with destination ip_address, gateway, subnet mask, metric
         self.ip_address = ip_address
         self.subnet = subnet
+
+    def send_keep_alive(self):
+        while True:
+            print("sending keep alive")
+            time.sleep(2)
 
     def print(self):
         print(self.name)
@@ -59,6 +68,7 @@ class CustomRouter:
                 self.routing_table.append((_from.ip_address, _from.ip_address, _from.subnet, 1))  # 1 is the hop
                 # TODO: create a better function to determine metrics
                 # TODO: make a router figure out what is the gateway for a certain destination
+                self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
 
         if _type == ETCP_MSG_TYPE.ACK:
             if tcp_message.is_fin_ack_response:
@@ -70,6 +80,8 @@ class CustomRouter:
                 self.links.append(_from)
                 self.routing_table.append((_from.ip_address, _from.ip_address, _from.subnet, 1))  # 1 is the hop
                 # TODO: create a better function to determine metrics
+                #TODO: define AS NUMBER in openbgpmessage
+                self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
 
         if _type == ETCP_MSG_TYPE.FIN_ACK:
             self.links.remove(_from)
@@ -86,6 +98,21 @@ class CustomRouter:
             print(f"{self.name}: Sending back FIN_ACK")
             self.send_tcp_msg(_from, CustomTcpMessage(
                 type=ETCP_MSG_TYPE.FIN_ACK))
+
+        if _type == ETCP_MSG_TYPE.NONE:
+            #assuming its a BGP MESSAGE
+            _bgptype = tcp_message.content.type
+            if _bgptype == BGP_MSG_TYPE.OPEN:
+                self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, tcp_message.seq_num+1, content=KeepAliveBgpMessage(is_open_response=True)))
+                x = threading.Thread(target=self.send_keep_alive)
+                x.start()
+            if _bgptype == BGP_MSG_TYPE.UPDATE:
+                print("update received")
+
+    def update_routing_table(self):
+        for l in self.links:
+            self.send_tcp_msg(l.ip_address, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage()))
+
 
     def send_packet(self, packet: CustomPacket):
         if packet.ip_from == self.ip_address:
