@@ -35,7 +35,6 @@ class UpdateBgpMessage(BgpMessage):
     """
     def __init__(self, WithdrawnRoutes: list, Origin: string, ASPath: list, NextHop: string, NLRIPrefix: string, NLRILegth: string ) -> None:
         
-        
         self.WithdrawnRoutes = WithdrawnRoutes
         self.Origin = Origin
         self.ASPath = ASPath
@@ -44,7 +43,6 @@ class UpdateBgpMessage(BgpMessage):
         self.NLRILegth = NLRILegth
         self.type = BGP_MSG_TYPE.UPDATE
         pass
-    
 
 class BGP_ERROR_TYPE(Enum):
     HEADER_ERROR = 1

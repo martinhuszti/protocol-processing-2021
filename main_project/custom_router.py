@@ -15,7 +15,7 @@ class CustomRouter:
  
     def __init__(self, AS_id='No AS_id given', ip_address="255.255.255.255", subnet=32):
         self.AS_id = AS_id
-        self.routing_table = []  # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost
+        self.routing_table = []  # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost, reference
         self.neighbor_table = [] # List of dictionaries with AS_id, ip_address, cost
         self.bgp_table = [] # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost
         self.links = []  # the link and the routing table index are matching
@@ -163,7 +163,7 @@ class CustomRouter:
         return None 
 
 
-    def update_routing_table(self, AS_path, origin):
+    def update_routing_table(self, AS_path):
         network = self.network
         subnet_mask = self.subnet
         for l in self.links:

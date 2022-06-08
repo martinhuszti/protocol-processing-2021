@@ -8,7 +8,7 @@ def start_simulation():
     network.add_router(create_custom_router('Test_router_2', "100.0.0.2", 8))
     network.add_link(0, 1)
 
-
+    print("SENDING PACKET FROM Test_router_1 to Test_router_2")
 
     ###########################For dev purposes, NEEDS TO BE CHANGED###########################
     #answer = input("Do you want to keep the current network? (y/n)")
