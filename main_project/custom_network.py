@@ -72,15 +72,17 @@ class CustomNetwork:
                     print(bcolors.FAIL + "Invalid option!" + bcolors.ENDC)
                     return
 
-        router1.set_neighbor(router2, random.randint(1, 10))
-        router2.set_neighbor(router1, random.randint(1, 10))
+        random_cost = random.randint(1,10)
+        router1.set_neighbor(router2, random_cost)
+        router2.set_neighbor(router1, random_cost)
 
         #SET UP ROUTING TABLE AFTER CREATION OF LINK
-        router1.update_routing_table([router2.AS_id],router2)
-        router2.update_routing_table([router1.AS_id],router1)
+        random_cost = random.randint(1,10)
+        router1.update_routing_table(router2.ip_address, router1.subnet, [], router2.ip_address, random_cost)
+        router2.update_routing_table(router1.ip_address, router1.subnet, [], router1.ip_address, random_cost)
 
         self.links.append((router1, router2))
-        
+
         print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
 
     def remove_link(self):

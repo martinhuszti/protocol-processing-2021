@@ -7,6 +7,7 @@ import ipaddress
 import threading
 import random
 from prettytable import PrettyTable
+import string
 
 from custom_bgp_message import BGP_MSG_TYPE, KeepAliveBgpMessage, OpenBgpMessage, UpdateBgpMessage  # to print routing tables in a cute way
 
@@ -27,7 +28,7 @@ class CustomRouter:
             print("sending keep alive")
             time.sleep(2)
 
-    def set_netowork(self, network):
+    def set_network(self, network):
         self.network = network
 
     def print(self):
@@ -37,18 +38,20 @@ class CustomRouter:
     #TODO UPDATE WITH THE NEW STRUCTURE
 
     def print_tables(self): 
-        t = PrettyTable(['Destination', 'Gateway', 'Netmask', 'Cost'])
+        t = PrettyTable()
         if not self.routing_table:
             print('This table is currently empty!')
             return
-        for r in self.routing_table:
-            t.add_row([r[0], r[1], r[2], r[3]])
+        for c in ['Destination', 'Netmask', 'Gateway' ,'Cost']:
+            t.add_column(c, [])
+        for dct in self.routing_table:
+            t.add_row([dct.get(c, "") for c in ['destination_network', 'subnet_mask', "next_hop" ,'cost']])
         print(t)
 
     ########################
 
     def send_tcp_msg(self, _to, msg: CustomTcpMessage):
-        self.current_seq_num = random()
+        self.current_seq_num = random.random()
         # If syn, generate seq number otherwise it is containing already
         if msg.type == ETCP_MSG_TYPE.SYN or msg.type == ETCP_MSG_TYPE.FIN:
             msg.seq_num = self.current_seq_num
@@ -73,7 +76,7 @@ class CustomRouter:
                 print(f"{self.AS_id}: The sequence number is correct, initializing connection")
                 self.send_tcp_msg(_from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
                 self.current_seq_num = 0
-                self.set_neighbor(_from)
+                self.set_neighbor(_from, random.randint(1,10))
                 # TODO: create a better function to determine metrics
                 # TODO: make a router figure out what is the gateway for a certain destination
                 self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
@@ -85,7 +88,7 @@ class CustomRouter:
                     f"{self.AS_id}: ACK arrived to the FIN_ACK message. Removing the link...")
             else:
                 print(f"{self.AS_id}: Initializing connection")
-                self.set_neighbor(_from)
+                self.set_neighbor(_from, random.randint(1,10))
                 # TODO: create a better function to determine metrics
                 #TODO: define AS NUMBER in openbgpmessage
                 self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
@@ -112,6 +115,8 @@ class CustomRouter:
                 self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, tcp_message.seq_num+1, content=KeepAliveBgpMessage(is_open_response=True)))
                 x = threading.Thread(target=self.send_keep_alive)
                 x.start()
+
+                
             if _bgptype == BGP_MSG_TYPE.UPDATE:
                 for u in tcp_message.content.updated_destinations:
                     update_routing_table(self, tcp_message.content.ASPath, tcp_message.content.Origin)
@@ -163,11 +168,10 @@ class CustomRouter:
         return None 
 
 
-    def update_routing_table(self, AS_path,origin):
-        network = self.network
-        subnet_mask = self.subnet
-        for l in self.links:
-            self.send_tcp_msg(l.ip_address, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage()))
+    #def update_routing_table(self, AS_path, origin, next_hop):
+    def update_routing_table(self, network, subnet_mask, AS_path, next_hop, cost):
+    #    for l in self.links:
+     #       self.send_tcp_msg(l.ip_address, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage()))
 
         tmp = False
         for neighbor in self.neighbor_table:
@@ -185,10 +189,11 @@ class CustomRouter:
         for elem in self.bgp_table:
             if network == elem['destination_network'] and subnet_mask == elem['subnet_mask'] and AS_path == elem['AS_path'] and next_hop == elem['next_hop']:
                 already_in_bgp_table = True
+                print("Already in BGP table")
                 break
             pos += 1
         if not already_in_bgp_table:
-            self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
+            self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})#, 'reference':origin})
         else:
             self.routing_table[pos]['cost'] = cost
 
@@ -199,10 +204,11 @@ class CustomRouter:
         for elem in self.routing_table:
             if network == elem['destination_network'] and subnet_mask == elem['subnet_mask']:
                 already_in_routing_table = True
+                print("Already in routing table")
                 break
             pos += 1
         if not already_in_routing_table:
-            self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
+            self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})#, 'reference':origin})
         else:
             if self.routing_table[pos]['cost'] > cost or (self.routing_table[pos]['cost'] == cost and len(self.routing_table[pos]['AS_path']) > len(AS_path)):
                 self.routing_table[pos]['cost'] = cost
