@@ -21,9 +21,7 @@ def start_simulation():
             if routers != other_routers and network.routers.index(other_routers)>network.routers.index(routers):
                 routers.send_tcp_msg(other_routers, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
                 other_routers.receive_tcp_msg(routers, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
-                other_routers.send_tcp_msg(routers, CustomTcpMessage(ETCP_MSG_TYPE.SYN_ACK))
                 routers.receive_tcp_msg(other_routers, CustomTcpMessage(ETCP_MSG_TYPE.SYN_ACK))
-                routers.send_tcp_msg(other_routers, CustomTcpMessage(ETCP_MSG_TYPE.ACK))
                 other_routers.receive_tcp_msg(routers, CustomTcpMessage(ETCP_MSG_TYPE.ACK))
 
 
