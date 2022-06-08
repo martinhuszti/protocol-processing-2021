@@ -5,6 +5,7 @@ from custom_packet import CustomPacket
 from custom_router import CustomRouter
 from custom_tcp_message import ETCP_MSG_TYPE, CustomTcpMessage
 import re  # to check input syntax
+import random
 
 
 class CustomNetwork:
@@ -71,8 +72,8 @@ class CustomNetwork:
                     print(bcolors.FAIL + "Invalid option!" + bcolors.ENDC)
                     return
 
-        router1.set_neighbor(router2, 1)
-        router2.set_neighbor(router1, 1)
+        router1.set_neighbor(router2, random.randint(1, 10))
+        router2.set_neighbor(router1, random.randint(1, 10))
         self.links.append((router1, router2))
         print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
 
