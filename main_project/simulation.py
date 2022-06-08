@@ -14,11 +14,11 @@ def start_simulation():
     network.add_link(0, 2)
     network.add_link(2, 3)
 
-    ## first syn ack synack
+    ## first syn synack ack 
     
     for routers in network.routers:
         for other_routers in network.routers:
-            if routers != other_routers:
+            if routers != other_routers and network.routers.index(other_routers)>network.routers.index(routers):
                 routers.send_tcp_msg(other_routers, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
                 other_routers.receive_tcp_msg(routers, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
                 other_routers.send_tcp_msg(routers, CustomTcpMessage(ETCP_MSG_TYPE.SYN_ACK))
