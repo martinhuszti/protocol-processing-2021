@@ -112,10 +112,6 @@ class CustomRouter:
             if _bgptype == BGP_MSG_TYPE.UPDATE:
                 print("update received")
 
-    def update_routing_table(self):
-        for l in self.links:
-            self.send_tcp_msg(l.ip_address, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage()))
-
 
     def send_packet(self, packet: CustomPacket):
         if packet.ip_from == self.ip_address:
@@ -161,6 +157,10 @@ class CustomRouter:
                     if elem['next_hop'] == neighbor['ip_address']:
                         return neighbor
         return None 
+    def update_routing_table(self): 
+        for l in self.links:
+            self.send_tcp_msg(l.ip_address, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage()))
+
 
     def update_routing_table(self, network, subnet_mask, AS_path, next_hop, cost):
         tmp = False
