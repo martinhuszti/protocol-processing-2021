@@ -24,20 +24,6 @@ def start_simulation():
                 routers.receive_tcp_msg(other_routers, CustomTcpMessage(ETCP_MSG_TYPE.SYN_ACK))
                 other_routers.receive_tcp_msg(routers, CustomTcpMessage(ETCP_MSG_TYPE.ACK))
 
-
-    userContinue = True
-    while(userContinue):
-        ##Magic for routers here
-
-        for routers in network.routers:
-            for other_routers in network.routers:
-                if routers != other_routers:
-                    routers.send_packet(other_routers)
-
-        answer = input("Do you want to stop the simulation? (y/n)")
-        if answer.lower() == "y":
-            break
-        pass
     
 
     #print("SENDING PACKET FROM Test_router_1 to Test_router_2")
