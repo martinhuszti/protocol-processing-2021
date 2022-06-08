@@ -112,9 +112,10 @@ class CustomRouter:
             #assuming its a BGP MESSAGE
             _bgptype = tcp_message.content.type
             if _bgptype == BGP_MSG_TYPE.OPEN:
-                self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, tcp_message.seq_num+1, content=KeepAliveBgpMessage(is_open_response=True)))
-                x = threading.Thread(target=self.send_keep_alive)
-                x.start()
+                #self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, tcp_message.seq_num+1, content=KeepAliveBgpMessage(is_open_response=True)))
+                #x = threading.Thread(target=self.send_keep_alive)
+                #x.start()
+                pass
 
                 
             if _bgptype == BGP_MSG_TYPE.UPDATE:
