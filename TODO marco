@@ -1,0 +1,3 @@
+define AS NUMBER in openbgpmessage
+change number of seconds in send keepalive
+finish update procedure
