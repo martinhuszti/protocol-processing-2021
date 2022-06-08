@@ -163,7 +163,7 @@ class CustomRouter:
         return None 
 
 
-    def update_routing_table(self, AS_path):
+    def update_routing_table(self, AS_path,origin):
         network = self.network
         subnet_mask = self.subnet
         for l in self.links:

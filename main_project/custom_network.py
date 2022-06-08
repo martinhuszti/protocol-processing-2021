@@ -76,11 +76,11 @@ class CustomNetwork:
         router2.set_neighbor(router1, random.randint(1, 10))
 
         #SET UP ROUTING TABLE AFTER CREATION OF LINK
-        #router1.update_routing_table(<AS_path>,<Origin>)
-        #router2.update_routing_table(<AS_path>,<Origin>)
-
+        router1.update_routing_table([router2.AS_id],router2)
+        router2.update_routing_table([router1.AS_id],router1)
 
         self.links.append((router1, router2))
+        
         print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
 
     def remove_link(self):
