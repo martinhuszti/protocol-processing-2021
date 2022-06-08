@@ -22,11 +22,15 @@ class CustomRouter:
         self.links = []  # the link and the routing table index are matching
         self.ip_address = ip_address
         self.subnet = subnet
+        self.keep_alive_thread = None
+        self.thread_life = 3
 
     def send_keep_alive(self):
-        while True:
+        while self.thread_life>0:
+            self.thread_life -= 1
             print("sending keep alive")
             time.sleep(2)
+        return
 
     def set_network(self, network):
         self.network = network
@@ -111,11 +115,14 @@ class CustomRouter:
         if _type == ETCP_MSG_TYPE.NONE:
             #assuming its a BGP MESSAGE
             _bgptype = tcp_message.content.type
+            
             if _bgptype == BGP_MSG_TYPE.OPEN:
-                #self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, tcp_message.seq_num+1, content=KeepAliveBgpMessage(is_open_response=True)))
-                #x = threading.Thread(target=self.send_keep_alive)
-                #x.start()
-                pass
+                self.send_tcp_msg(_from, CustomTcpMessage(
+                    ETCP_MSG_TYPE.NONE, tcp_message.seq_num+1, content=KeepAliveBgpMessage(is_open_response=True)))
+                if not self.keep_alive_thread:
+                    self.keep_alive_thread = threading.Thread(
+                        target=self.send_keep_alive)
+                    self.keep_alive_thread.start()
 
                 
             if _bgptype == BGP_MSG_TYPE.UPDATE:
