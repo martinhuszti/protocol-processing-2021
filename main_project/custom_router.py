@@ -80,7 +80,6 @@ class CustomRouter:
                 print(f"{self.AS_id}: The sequence number is correct, initializing connection")
                 self.send_tcp_msg(_from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
                 self.current_seq_num = 0
-                self.set_neighbor(_from, random.randint(1,10))
                 # TODO: create a better function to determine metrics
                 # TODO: make a router figure out what is the gateway for a certain destination
                 self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
@@ -92,7 +91,7 @@ class CustomRouter:
                     f"{self.AS_id}: ACK arrived to the FIN_ACK message. Removing the link...")
             else:
                 print(f"{self.AS_id}: Initializing connection")
-                self.set_neighbor(_from, random.randint(1,10))
+                #self.set_neighbor(_from, random.randint(1,10))
                 # TODO: create a better function to determine metrics
                 #TODO: define AS NUMBER in openbgpmessage
                 self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
