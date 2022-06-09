@@ -128,6 +128,8 @@ class CustomRouter:
                     for route in bgp_message.WithdrawnRoutes:
                         self.remove_route(route)
                 bgp_message.ASPath.append(self.AS_id)
+                for nlri in bgp_message.NLRI:
+                    self.update_routing_table(nlri[0], nlri[1], bgp_message.ASPath, _from.ip_address, nlri[2])
                 for entry in self.neighbor_table:
                     if entry['AS_id'] not in bgp_message.ASPath:
                         self.send_tcp_msg(entry['reference'], CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage(bgp_message.WithdrawnRoutes, bgp_message.ASPath, bgp_message.NextHop, bgp_message.NLRI)))
@@ -177,13 +179,12 @@ class CustomRouter:
                 return neighbor
         for elem in self.routing_table:
             if ipaddress.ip_address(ip_address) in ipaddress.ip_network(f"{elem['destination_network']}/{elem['subnet_mask']}"):
-                for neighbor in elem['reference']['neighbor_table']:
+                for neighbor in self.neighbor_table:
                     if elem['next_hop'] == neighbor['ip_address']:
                         return neighbor
         return None 
 
 
-    #def update_routing_table(self, AS_path, origin, next_hop):
     def update_routing_table(self, network, subnet_mask, AS_path, next_hop, cost):
 
         tmp = False
@@ -207,7 +208,7 @@ class CustomRouter:
                 break
             pos += 1
         if not already_in_bgp_table:
-            self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})#, 'reference':origin})
+            self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
         else:
             self.routing_table[pos]['cost'] = cost
 
@@ -222,7 +223,7 @@ class CustomRouter:
                 break
             pos += 1
         if not already_in_routing_table:
-            self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})#, 'reference':origin})
+            self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
         else:
             if self.routing_table[pos]['cost'] > cost or (self.routing_table[pos]['cost'] == cost and len(self.routing_table[pos]['AS_path']) > len(AS_path)):
                 self.routing_table[pos]['cost'] = cost

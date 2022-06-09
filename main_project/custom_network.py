@@ -86,14 +86,12 @@ class CustomNetwork:
         # Excahning BGP Update
         newNLRI = []
         for entry in router1.routing_table:
-            newNLRI.append((entry['destination_network'],entry['subnet_mask']))
-        newNLRI.append((router1.ip_address,router1.subnet))
+            newNLRI.append((entry['destination_network'], entry['subnet_mask'], entry['cost']))
         router1.send_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage([],[router1.AS_id], router1.ip_address, newNLRI)))
 
         newNLRI = []
         for entry in router2.routing_table:
-            newNLRI.append((entry['destination_network'],entry['subnet_mask']))
-        newNLRI.append((router2.ip_address,router2.subnet))
+            newNLRI.append((entry['destination_network'], entry['subnet_mask'], entry['cost']))
         router2.send_tcp_msg(router1, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage([], [router2.AS_id], router2.ip_address, newNLRI)))
 
         print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
@@ -197,7 +195,7 @@ class CustomNetwork:
         print(bcolors.ENDC)
 
         inp = input("Index of the source router:")
-        ip_to = input("Destination Ip address:")  # MAYBE WE CAN USE THE INDEX HERE TOO?
+        ip_to = input("Destination Ip address:")  #TODO: AVOID INFINITE LOOP WHILE GOING TO A SPECIFIC ADDRESS IN AS#
         if int(inp) >= 0 and int(inp) < len(self.routers):
             selected_router = self.routers[int(inp)]
             selected_router.send_packet(CustomPacket(selected_router.ip_address, ip_to))
