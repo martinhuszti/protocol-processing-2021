@@ -31,7 +31,7 @@ while True:
         continue
     if sc == 3:
         network.remove_router()
-        continue
+        continue    
     if sc == 4:
         network.add_link(network)
         continue

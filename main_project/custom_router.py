@@ -17,7 +17,7 @@ class CustomRouter:
     def __init__(self, AS_id='No AS_id given', ip_address="255.255.255.255", subnet=32):
         self.AS_id = AS_id
         self.routing_table = []  # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost, reference
-        self.neighbor_table = [] # List of dictionaries with AS_id, ip_address, cost
+        self.neighbor_table = [] # List of dictionaries with AS_id, ip_address, cost, reference
         self.bgp_table = [] # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost
         self.links = []  # the link and the routing table index are matching
         self.ip_address = ip_address
@@ -87,8 +87,7 @@ class CustomRouter:
                 
         if _type == ETCP_MSG_TYPE.ACK:
             if tcp_message.is_fin_ack_response:
-                print(
-                    f"{self.AS_id}: ACK arrived to the FIN_ACK message. Removing the link...")
+                print(f"{self.AS_id}: ACK arrived to the FIN_ACK message. Removing the link...")
             else:
                 print(f"{self.AS_id}: Initializing connection")
                 #self.set_neighbor(_from, random.randint(1,10))
@@ -113,8 +112,8 @@ class CustomRouter:
 
         if _type == ETCP_MSG_TYPE.NONE:
             #assuming its a BGP MESSAGE
-            _bgptype = tcp_message.content.type
-            
+            bgp_message = tcp_message.content
+            _bgptype = bgp_message.type
             if _bgptype == BGP_MSG_TYPE.OPEN:
                 self.send_tcp_msg(_from, CustomTcpMessage(
                     ETCP_MSG_TYPE.NONE, tcp_message.seq_num+1, content=KeepAliveBgpMessage(is_open_response=True)))
@@ -122,32 +121,39 @@ class CustomRouter:
                     self.keep_alive_thread = threading.Thread(
                         target=self.send_keep_alive)
                     self.keep_alive_thread.start()
-
-                
+   
             if _bgptype == BGP_MSG_TYPE.UPDATE:
-                for u in tcp_message.content.updated_destinations:
-                    update_routing_table(self, tcp_message.content.ASPath, tcp_message.content.Origin)
-
+                print(f'{self.AS_id}: BGP message arrived: UPDATE')
+                if bgp_message.WithdrawnRoutes:
+                    for route in bgp_message.WithdrawnRoutes:
+                        self.remove_route(route)
+                bgp_message.ASPath.append(self.AS_id)
+                for entry in self.neighbor_table:
+                    if entry['AS_id'] not in bgp_message.ASPath:
+                        self.send_tcp_msg(entry['reference'], CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage(bgp_message.WithdrawnRoutes, bgp_message.ASPath, bgp_message.NextHop, bgp_message.NLRI)))
 
     def send_packet(self, packet: CustomPacket):
+        # If the router initializing the sending
         if packet.ip_from == self.ip_address:
             print(f"{self.AS_id}: I'm sending a packet to: {packet.ip_to}")
+        # If the router is not the initialization router then it can be the destination router or in-between router
         else:
             print(f"{self.AS_id}: A new packet arrived.")
-
+        # Check if packet arrived to the destination
         if packet.ip_to == self.ip_address:
             print(
                 f"{self.AS_id}:" + bcolors.OKGREEN +
                 f" I am the destination of the packet! It's arrived to the destination! {self.ip_address}"
                 + bcolors.ENDC)
             return
-
+        # Check where to forward the packet
         found_router = self.select_next_hop(packet.ip_to)
         if found_router:
-            found_router.reference.send_packet(packet)
+            found_router['reference'].send_packet(packet)
         else:
             print(f'{bcolors.FAIL}Error: no possible route found{bcolors.ENDC}')
 
+    # neighbor is the router that we need to set
     def set_neighbor(self, neighbor, cost):
         tmp = False
         for entry in self.neighbor_table:
@@ -156,7 +162,8 @@ class CustomRouter:
                 tmp = True
                 break
         if not tmp: 
-            self.neighbor_table.append({'AS_id': neighbor.AS_id, 'ip_address': neighbor.ip_address, 'cost': cost})
+            print(f"{self.AS_id}-set_neighbor: New neighbor added to the neighbor_table")
+            self.neighbor_table.append({'AS_id': neighbor.AS_id, 'ip_address': neighbor.ip_address, 'cost': cost, 'reference' : neighbor})
 
     def remove_neighbor(self, neighbor):
         for entry in self.neighbor_table:
@@ -166,10 +173,11 @@ class CustomRouter:
     def select_next_hop(self, ip_address):
         for neighbor in self.neighbor_table:
             if ip_address == neighbor['ip_address']:
+                print(f"{self.AS_id}-select_next-hop: router found in neighbouring table!")
                 return neighbor
         for elem in self.routing_table:
             if ipaddress.ip_address(ip_address) in ipaddress.ip_network(f"{elem['destination_network']}/{elem['subnet_mask']}"):
-                for neighbor in self.neighbor_table:
+                for neighbor in elem['reference']['neighbor_table']:
                     if elem['next_hop'] == neighbor['ip_address']:
                         return neighbor
         return None 
@@ -177,8 +185,6 @@ class CustomRouter:
 
     #def update_routing_table(self, AS_path, origin, next_hop):
     def update_routing_table(self, network, subnet_mask, AS_path, next_hop, cost):
-    #    for l in self.links:
-     #       self.send_tcp_msg(l.ip_address, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage()))
 
         tmp = False
         for neighbor in self.neighbor_table:
@@ -190,7 +196,8 @@ class CustomRouter:
             return f'{bcolors.FAIL}Error: unknwon next hop{bcolors.ENDC}'
         
 
-        ###bgp_table###
+        ##
+        # ###
         already_in_bgp_table = False
         pos = 0
         for elem in self.bgp_table:
@@ -222,4 +229,21 @@ class CustomRouter:
                 self.routing_table[pos]['next_hop'] = next_hop
                 self.routing_table[pos]['AS_path'] = AS_path
 
+    def remove_route(self, route):
+        for entry in self.routing_table:
+            if route.network == entry["destination_network"] and route.subnet == entry['subnet_mask'] and route.AS_path == entry["AS_path"]:
+                self.routing_table.remove(entry)
+        for entry in self.bgp_table:
+            if route.network == entry["destination_network"] and route.subnet == entry['subnet_mask'] and route.AS_path == entry["AS_path"]:
+                self.bgp_table.remove(entry)
+
+        new_route = None
+        for entry in self.bgp_table:
+            if route.network == entry["destination_network"] and route.subnet == entry['subnet_mask']:
+                if not new_route:
+                    new_route = entry
+                elif entry["cost"] < new_route["cost"]:
+                    new_route = entry
         
+        if new_route:
+            self.routing_table.append(new_route)

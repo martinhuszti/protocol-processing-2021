@@ -4,6 +4,7 @@ from bcolors import bcolors
 from custom_packet import CustomPacket
 from custom_router import CustomRouter
 from custom_tcp_message import ETCP_MSG_TYPE, CustomTcpMessage
+from custom_bgp_message import *
 import re  # to check input syntax
 import random
 
@@ -80,8 +81,20 @@ class CustomNetwork:
         random_cost = random.randint(1,10)
         router1.update_routing_table(router2.ip_address, router1.subnet, [], router2.ip_address, random_cost)
         router2.update_routing_table(router1.ip_address, router1.subnet, [], router1.ip_address, random_cost)
-
         self.links.append((router1, router2))
+
+        # Excahning BGP Update
+        newNLRI = []
+        for entry in router1.routing_table:
+            newNLRI.append((entry['destination_network'],entry['subnet_mask']))
+        newNLRI.append((router1.ip_address,router1.subnet))
+        router1.send_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage([],[router1.AS_id], router1.ip_address, newNLRI)))
+
+        newNLRI = []
+        for entry in router2.routing_table:
+            newNLRI.append((entry['destination_network'],entry['subnet_mask']))
+        newNLRI.append((router2.ip_address,router2.subnet))
+        router2.send_tcp_msg(router1, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage([], [router2.AS_id], router2.ip_address, newNLRI)))
 
         print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
 

@@ -33,14 +33,13 @@ class UpdateBgpMessage(BgpMessage):
     AS Path: Mandatory attribute composed of a sequence of autonomous system path segments
     Next Hop: Mandatory attribute that defines the IP address of the border router that should be used as the next hop to destinations listed in the network layer reachability information field
     """
-    def __init__(self, WithdrawnRoutes: list, Origin: string, ASPath: list, NextHop: string, NLRIPrefix: string, NLRILegth: string ) -> None:
+    def __init__(self, WithdrawnRoutes: list, ASPath: list, NextHop: string, NLRI: list) -> None:
         
         self.WithdrawnRoutes = WithdrawnRoutes
-        self.Origin = Origin
+        self.Origin = 'EGP'
         self.ASPath = ASPath
         self.NextHop = NextHop
-        self.NLRIPrefix = NLRIPrefix
-        self.NLRILegth = NLRILegth
+        self.NLRI = NLRI
         self.type = BGP_MSG_TYPE.UPDATE
         pass
 
