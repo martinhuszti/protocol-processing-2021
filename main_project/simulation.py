@@ -26,7 +26,7 @@ def start_simulation():
     #             other_routers.receive_tcp_msg(routers, CustomTcpMessage(ETCP_MSG_TYPE.ACK))
     
     #network.routers[0].send_packet(CustomPacket(network.routers[0].ip_address,network.routers[1].ip_address))
-    network.routers[0].send_packet(CustomPacket(network.routers[0].ip_address,network.routers[3].ip_address))
+    #network.routers[0].send_packet(CustomPacket(network.routers[0].ip_address,network.routers[3].ip_address))
     
 
     ###########################For dev purposes, NEEDS TO BE CHANGED###########################

@@ -85,6 +85,7 @@ class CustomNetwork:
 
         # Excahning BGP Update
         newNLRI = []
+        router1.routers_handshake(router2)
         for entry in router1.routing_table:
             newNLRI.append((entry['destination_network'], entry['subnet_mask'], entry['cost']))
         router1.send_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage([],[router1.AS_id], router1.ip_address, newNLRI)))

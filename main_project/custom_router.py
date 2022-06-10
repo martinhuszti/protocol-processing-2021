@@ -243,3 +243,10 @@ class CustomRouter:
         
         if new_route:
             self.routing_table.append(new_route)
+
+    def routers_handshake(self, router2):
+        self.send_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
+        router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
+        self.receive_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.SYN_ACK))
+        router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.ACK))
+        return
