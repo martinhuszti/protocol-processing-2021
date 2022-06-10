@@ -51,8 +51,6 @@ class BGP_ERROR_TYPE(Enum):
     FINITE_STATE_MACHINE_ERROR = 5
     CEASE = 6
 
-
-
 class NotificationBgpMessage(BgpMessage):
     """
     """

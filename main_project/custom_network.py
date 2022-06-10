@@ -132,12 +132,11 @@ class CustomNetwork:
         print(bcolors.OKCYAN)
         self._printRouters()
         print(bcolors.ENDC)
-        # TODO: when removing a router, (delete its links to other routers -> DONE) and the rows in the routing table -> I think that rows from routing table must be managed by BGP messages after the router understood its neigbor died
         sr = input('Select which router you want to remove (press a letter to exit): ')
         if sr.isdigit() and int(sr) >= 0 and int(sr) <= len(self.routers) - 1:
             removed_router = self.routers.pop(int(sr))
             for link in self.links:
-                if removed_router in link:
+                if removed_router in link :
                     router1: CustomRouter = link[0]
                     router2: CustomRouter = link[1]
                     router1.remove_neighbor(router2)
@@ -195,7 +194,7 @@ class CustomNetwork:
         print(bcolors.ENDC)
 
         inp = input("Index of the source router:")
-        ip_to = input("Destination Ip address:")  #TODO: AVOID INFINITE LOOP WHILE GOING TO A SPECIFIC ADDRESS IN AS#
+        ip_to = input("Destination Ip address:")
         if int(inp) >= 0 and int(inp) < len(self.routers):
             selected_router = self.routers[int(inp)]
             selected_router.send_packet(CustomPacket(selected_router.ip_address, ip_to))

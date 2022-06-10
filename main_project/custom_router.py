@@ -39,7 +39,6 @@ class CustomRouter:
         print(self.AS_id)
 
     ############################
-    #TODO UPDATE WITH THE NEW STRUCTURE
 
     def print_tables(self): 
         t = PrettyTable()
@@ -80,8 +79,6 @@ class CustomRouter:
                 print(f"{self.AS_id}: The sequence number is correct, initializing connection")
                 self.send_tcp_msg(_from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
                 self.current_seq_num = 0
-                # TODO: create a better function to determine metrics
-                # TODO: make a router figure out what is the gateway for a certain destination
                 self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
 
                 
@@ -90,9 +87,7 @@ class CustomRouter:
                 print(f"{self.AS_id}: ACK arrived to the FIN_ACK message. Removing the link...")
             else:
                 print(f"{self.AS_id}: Initializing connection")
-                #self.set_neighbor(_from, random.randint(1,10))
-                # TODO: create a better function to determine metrics
-                #TODO: define AS NUMBER in openbgpmessage
+
                 self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
 
         if _type == ETCP_MSG_TYPE.FIN_ACK:
@@ -142,7 +137,7 @@ class CustomRouter:
         else:
             print(f"{self.AS_id}: A new packet arrived.")
         # Check if packet arrived to the destination
-        if packet.ip_to == self.ip_address:
+        if packet.ip_to == self.ip_address or ipaddress.ip_address(packet.ip_to) in ipaddress.ip_network(self.ip_address+"/"+str(self.subnet)):
             print(
                 f"{self.AS_id}:" + bcolors.OKGREEN +
                 f" I am the destination of the packet! It's arrived to the destination! {self.ip_address}"
