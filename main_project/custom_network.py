@@ -15,6 +15,7 @@ class CustomNetwork:
         self.links = []
 
     def add_router(self, new_router):
+        new_router.set_network(self)
         if self.unique_IP(new_router):
             self.routers.append(new_router)
             print(bcolors.OKGREEN +

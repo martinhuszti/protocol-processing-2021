@@ -28,7 +28,7 @@ class CustomRouter:
     def send_keep_alive(self):
         while self.thread_life>0:
             self.thread_life -= 1
-            print("sending keep alive")
+            #print("sending keep alive")
             time.sleep(2)
         return
 
@@ -121,6 +121,7 @@ class CustomRouter:
                 print(f'{self.AS_id}: BGP message arrived: UPDATE')
                 if bgp_message.WithdrawnRoutes:
                     for route in bgp_message.WithdrawnRoutes:
+                        print(route.ip_address)
                         self.remove_route(route)
                 bgp_message.ASPath.append(self.AS_id)
                 for nlri in bgp_message.NLRI:
@@ -166,6 +167,11 @@ class CustomRouter:
         for entry in self.neighbor_table:
             if entry['ip_address'] == neighbor.ip_address:
                 self.neighbor_table.remove(entry)
+        else:
+            for r in self.network.routers:
+                if(r.AS_id == entry['AS_id']):
+                    self.send_tcp_msg(r, CustomTcpMessage(
+                    ETCP_MSG_TYPE.NONE, 0, content=UpdateBgpMessage(WithdrawnRoutes=[neighbor], ASPath=[], NextHop='', NLRI=[])))
 
     def select_next_hop(self, ip_address):
         for neighbor in self.neighbor_table:
