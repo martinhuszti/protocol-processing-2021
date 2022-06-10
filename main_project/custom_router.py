@@ -126,6 +126,75 @@ class CustomRouter:
                 f" The destination of the packet is me! It's arrived to the destination! {self.ip_address}"
                 + bcolors.ENDC)
             return
+        # Check where to forward the packet
+        found_router = self.select_next_hop(packet.ip_to)
+        if found_router:
+            found_router['reference'].send_packet(packet)
+        else:
+            print(f'{bcolors.FAIL}Error: no possible route found{bcolors.ENDC}')
+
+    # neighbor is the router that we need to set
+    def set_neighbor(self, neighbor, cost):
+        tmp = False
+        for entry in self.neighbor_table:
+            if entry['ip_address'] == neighbor.ip_address:
+                entry['cost'] = cost #chosen randomly to assign different costs
+                tmp = True
+                break
+        if not tmp: 
+            print(f"{self.AS_id}-set_neighbor: New neighbor added to the neighbor_table")
+            self.neighbor_table.append({'AS_id': neighbor.AS_id, 'ip_address': neighbor.ip_address, 'cost': cost, 'reference' : neighbor})
+
+    def remove_neighbor(self, neighbor):
+        for entry in self.neighbor_table:
+            if entry['ip_address'] == neighbor.ip_address:
+                self.neighbor_table.remove(entry)
+            else:
+                for r in self.network.routers:
+                    if(r.AS_id == entry['AS_id']):
+                        self.send_tcp_msg(r, CustomTcpMessage(
+                        ETCP_MSG_TYPE.NONE, 0, content=UpdateBgpMessage(WithdrawnRoutes=[neighbor], ASPath=[], NextHop='', NLRI=[])))
+
+    def select_next_hop(self, ip_address):
+        for neighbor in self.neighbor_table:
+            if ip_address == neighbor['ip_address']:
+                print(f"{self.AS_id}-select_next-hop: router found in neighbouring table!")
+                return neighbor
+        for elem in self.routing_table:
+            if ipaddress.ip_address(ip_address) in ipaddress.ip_network(f"{elem['destination_network']}/{elem['subnet_mask']}"):
+                for neighbor in self.neighbor_table:
+                    if elem['next_hop'] == neighbor['ip_address']:
+                        return neighbor
+        return None 
+
+
+    def update_routing_table(self, network, subnet_mask, AS_path, next_hop, cost):
+
+        tmp = False
+        for neighbor in self.neighbor_table:
+            if next_hop == neighbor['ip_address']: 
+                cost += neighbor['cost']
+                tmp = True
+                break
+        if not tmp:
+            return f'{bcolors.FAIL}Error: unknwon next hop{bcolors.ENDC}'
+        
+
+        ##
+        # ###
+        already_in_bgp_table = False
+        pos = 0
+        for elem in self.bgp_table:
+            if network == elem['destination_network'] and subnet_mask == elem['subnet_mask'] and AS_path == elem['AS_path'] and next_hop == elem['next_hop']:
+                already_in_bgp_table = True
+                print("Already in BGP table")
+                break
+            pos += 1
+        if not already_in_bgp_table:
+            self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
+        else:
+            self.routing_table[pos]['cost'] = cost
+
 
         found_router = Empty
         for link in self.links:
