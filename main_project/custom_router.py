@@ -85,10 +85,9 @@ class CustomRouter:
                 
         if _type == ETCP_MSG_TYPE.ACK:
             if tcp_message.is_fin_ack_response:
-                print(f"{self.ip_address}: ACK arrived to the FIN_ACK message. Removing the link...")
+                print(f"{self.ip_address}: ACK arrived to the FIN_ACK message")
             else:
                 print(f"{self.ip_address}: Initializing connection")
-
                 self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
 
         if _type == ETCP_MSG_TYPE.FIN_ACK:
