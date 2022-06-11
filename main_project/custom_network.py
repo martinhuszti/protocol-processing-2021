@@ -73,7 +73,7 @@ class CustomNetwork:
                     print(bcolors.FAIL + "Invalid option!" + bcolors.ENDC)
                     return
 
-        random_cost = 5 #random.randint(1,10)
+        random_cost = random.randint(1,10)
         router1.set_neighbor(router2, random_cost)
         router2.set_neighbor(router1, random_cost)
 
