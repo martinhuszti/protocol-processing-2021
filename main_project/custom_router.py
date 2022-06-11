@@ -121,14 +121,17 @@ class CustomRouter:
                 print(f'{self.ip_address}: BGP message arrived: UPDATE')
                 if bgp_message.WithdrawnRoutes:
                     for route in bgp_message.WithdrawnRoutes:
-                        self.remove_route(route)
+                        self.remove_route(route) 
+                        # TODO: remove also all the possible routes that become invalid
                 bgp_message.ASPath.append(self.AS_id)
+                print(bgp_message.ASPath)
+                newNLRI = []               
                 for nlri in bgp_message.NLRI:
                     if nlri[0] != self.ip_address:
-                        self.update_routing_table(nlri[0], nlri[1], bgp_message.ASPath, _from.ip_address, nlri[2])
+                        newNLRI.append(self.update_routing_table(nlri[0], nlri[1], bgp_message.ASPath, _from.ip_address, nlri[2]))
                 for entry in self.neighbor_table:
                     if entry['AS_id'] not in bgp_message.ASPath:
-                        self.send_tcp_msg(entry['reference'], CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage(bgp_message.WithdrawnRoutes, bgp_message.ASPath, bgp_message.NextHop, bgp_message.NLRI)))
+                        self.send_tcp_msg(entry['reference'], CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage(bgp_message.WithdrawnRoutes, bgp_message.ASPath, bgp_message.NextHop, newNLRI)))
 
     def send_packet(self, packet: CustomPacket):
         # If the router initializing the sending
@@ -183,10 +186,11 @@ class CustomRouter:
     def update_routing_table(self, network, subnet_mask, AS_path, next_hop, cost):
 
         tmp = False
+        new_cost = cost
         for neighbor in self.neighbor_table:
             if next_hop == neighbor['ip_address']:
-                if ipaddress.ip_address(neighbor['ip_address']) not in ipaddress.ip_network(network+"/"+str(subnet_mask)): 
-                    cost += neighbor['cost']
+                if ipaddress.ip_address(next_hop) not in ipaddress.ip_network(network+"/"+str(subnet_mask)): 
+                    new_cost += neighbor['cost']
                 tmp = True
                 break
         if not tmp:
@@ -202,9 +206,9 @@ class CustomRouter:
                     break
                 pos += 1
             if not already_in_bgp_table:
-                self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
+                self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': new_cost})
             else:
-                self.routing_table[pos]['cost'] = cost
+                self.routing_table[pos]['cost'] = new_cost
 
 
             ###routing_table###
@@ -217,12 +221,13 @@ class CustomRouter:
                     break
                 pos += 1
             if not already_in_routing_table:
-                self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
+                self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': new_cost})
             else:
-                if self.routing_table[pos]['cost'] > cost or (self.routing_table[pos]['cost'] == cost and len(self.routing_table[pos]['AS_path']) > len(AS_path)):
-                    self.routing_table[pos]['cost'] = cost
+                if self.routing_table[pos]['cost'] > new_cost or (self.routing_table[pos]['cost'] == new_cost and len(self.routing_table[pos]['AS_path']) > len(AS_path)):
+                    self.routing_table[pos]['cost'] = new_cost
                     self.routing_table[pos]['next_hop'] = next_hop
                     self.routing_table[pos]['AS_path'] = AS_path
+            return((network, subnet_mask, new_cost))
 
     def remove_route(self, route):
         for entry in self.routing_table:
