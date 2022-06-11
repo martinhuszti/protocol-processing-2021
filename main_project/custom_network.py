@@ -92,7 +92,7 @@ class CustomNetwork:
             newNLRI.append((entry['destination_network'], entry['subnet_mask'], entry['cost']))
         router2.send_tcp_msg(router1, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage([], [router2.AS_id], router2.ip_address, newNLRI)))
 
-        #TODO: close the connection with FIN - FIN-ACK ??
+        router1.send_tcp_msg(router2, CustomTcpMessage(type=ETCP_MSG_TYPE.FIN, ip_address=router1.ip_address, subnet=router1.subnet))
 
         print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
 
