@@ -7,8 +7,12 @@
 - Victor Schmit
 
 ## Insturctions
-To run the code you should build the ns-3 library after that with the command:
+Firstly install the dependencies with:
+
+```
+pip install -r requirements.txt
+```
+Then you can start using the project:
 ```
 python3 main.py
 ```
-you are able to run the projects.
