@@ -73,27 +73,26 @@ class CustomNetwork:
                     print(bcolors.FAIL + "Invalid option!" + bcolors.ENDC)
                     return
 
-        random_cost = random.randint(1,10)
+        random_cost = 5 #random.randint(1,10)
         router1.set_neighbor(router2, random_cost)
         router2.set_neighbor(router1, random_cost)
 
         #SET UP ROUTING TABLE AFTER CREATION OF LINK
-        random_cost = random.randint(1,10)
-        router1.update_routing_table(router2.ip_address, router1.subnet, [], router2.ip_address, random_cost)
-        router2.update_routing_table(router1.ip_address, router1.subnet, [], router1.ip_address, random_cost)
         self.links.append((router1, router2))
 
         # Excahning BGP Update
-        newNLRI = []
         router1.routers_handshake(router2)
+        newNLRI = [(router1.ip_address, router1.subnet, random_cost)]
         for entry in router1.routing_table:
             newNLRI.append((entry['destination_network'], entry['subnet_mask'], entry['cost']))
         router1.send_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage([],[router1.AS_id], router1.ip_address, newNLRI)))
 
-        newNLRI = []
+        newNLRI = [(router2.ip_address, router2.subnet, random_cost)]
         for entry in router2.routing_table:
             newNLRI.append((entry['destination_network'], entry['subnet_mask'], entry['cost']))
         router2.send_tcp_msg(router1, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage([], [router2.AS_id], router2.ip_address, newNLRI)))
+
+        #TODO: close the connection with FIN - FIN-ACK ??
 
         print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
 

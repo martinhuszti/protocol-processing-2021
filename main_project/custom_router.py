@@ -124,7 +124,8 @@ class CustomRouter:
                         self.remove_route(route)
                 bgp_message.ASPath.append(self.AS_id)
                 for nlri in bgp_message.NLRI:
-                    self.update_routing_table(nlri[0], nlri[1], bgp_message.ASPath, _from.ip_address, nlri[2])
+                    if nlri[0] != self.ip_address:
+                        self.update_routing_table(nlri[0], nlri[1], bgp_message.ASPath, _from.ip_address, nlri[2])
                 for entry in self.neighbor_table:
                     if entry['AS_id'] not in bgp_message.ASPath:
                         self.send_tcp_msg(entry['reference'], CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage(bgp_message.WithdrawnRoutes, bgp_message.ASPath, bgp_message.NextHop, bgp_message.NLRI)))
@@ -179,51 +180,49 @@ class CustomRouter:
                         return neighbor
         return None 
 
-
     def update_routing_table(self, network, subnet_mask, AS_path, next_hop, cost):
 
         tmp = False
         for neighbor in self.neighbor_table:
-            if next_hop == neighbor['ip_address']: 
-                cost += neighbor['cost']
+            if next_hop == neighbor['ip_address']:
+                if ipaddress.ip_address(neighbor['ip_address']) not in ipaddress.ip_network(network+"/"+str(subnet_mask)): 
+                    cost += neighbor['cost']
                 tmp = True
                 break
         if not tmp:
-            return f'{bcolors.FAIL}Error: unknwon next hop{bcolors.ENDC}'
-        
-
-        ##
-        # ###
-        already_in_bgp_table = False
-        pos = 0
-        for elem in self.bgp_table:
-            if network == elem['destination_network'] and subnet_mask == elem['subnet_mask'] and AS_path == elem['AS_path'] and next_hop == elem['next_hop']:
-                already_in_bgp_table = True
-                print("Already in BGP table")
-                break
-            pos += 1
-        if not already_in_bgp_table:
-            self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
+            print(f'{bcolors.FAIL}Error: unknwon next hop{bcolors.ENDC}')
         else:
-            self.routing_table[pos]['cost'] = cost
-
-
-        ###routing_table###
-        already_in_routing_table = False
-        pos = 0
-        for elem in self.routing_table:
-            if network == elem['destination_network'] and subnet_mask == elem['subnet_mask']:
-                already_in_routing_table = True
-                print("Already in routing table")
-                break
-            pos += 1
-        if not already_in_routing_table:
-            self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
-        else:
-            if self.routing_table[pos]['cost'] > cost or (self.routing_table[pos]['cost'] == cost and len(self.routing_table[pos]['AS_path']) > len(AS_path)):
+            ###bgp_table###
+            already_in_bgp_table = False
+            pos = 0
+            for elem in self.bgp_table:
+                if network == elem['destination_network'] and subnet_mask == elem['subnet_mask'] and AS_path == elem['AS_path'] and next_hop == elem['next_hop']:
+                    already_in_bgp_table = True
+                    print("Already in BGP table")
+                    break
+                pos += 1
+            if not already_in_bgp_table:
+                self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
+            else:
                 self.routing_table[pos]['cost'] = cost
-                self.routing_table[pos]['next_hop'] = next_hop
-                self.routing_table[pos]['AS_path'] = AS_path
+
+
+            ###routing_table###
+            already_in_routing_table = False
+            pos = 0
+            for elem in self.routing_table:
+                if network == elem['destination_network'] and subnet_mask == elem['subnet_mask']:
+                    already_in_routing_table = True
+                    print("Already in routing table")
+                    break
+                pos += 1
+            if not already_in_routing_table:
+                self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': cost})
+            else:
+                if self.routing_table[pos]['cost'] > cost or (self.routing_table[pos]['cost'] == cost and len(self.routing_table[pos]['AS_path']) > len(AS_path)):
+                    self.routing_table[pos]['cost'] = cost
+                    self.routing_table[pos]['next_hop'] = next_hop
+                    self.routing_table[pos]['AS_path'] = AS_path
 
     def remove_route(self, route):
         for entry in self.routing_table:
