@@ -28,8 +28,8 @@ class CustomRouter:
 
     def send_keep_alive(self):
         while self.thread_life>0:
-            self.thread_life -= 1
-            print("sending keep alive")
+            self.thread_life -= 1    
+            print(bcolors.OKCYAN +f"{self.AS_id}: Keep alive message sent" +bcolors.ENDC)
             time.sleep(2)
         return
 
