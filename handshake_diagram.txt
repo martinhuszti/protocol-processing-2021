@@ -1,0 +1,18 @@
+Title Router handshake (routers_handshake)
+
+participant Router_1
+
+participant Router_2
+
+Router_1->Router_1:send_tcp_msg(Router_2, SYN)
+box left of Router_1:Generate\nseq_num
+Router_1->Router_2:receive_tcp_msg(SYN)
+Router_2->Router_2:send_tcp_msg(Router_1, SYN_ACK)
+Router_1<-Router_2:receive_tcp_msg(SYN_ACK)
+
+
+Router_1->Router_1:send_tcp_msg(Router_2, SYN_ACK)
+
+Router_2<-Router_1:receive_tcp_msg(ACK)
+
+box right of Router_2:Handshake completed\n

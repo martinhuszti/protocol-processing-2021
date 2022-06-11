@@ -85,7 +85,7 @@ class CustomRouter:
 
         # 1. Start with SYN
         if _type == ETCP_MSG_TYPE.SYN:
-            print(f'{self.AS_id}({self.ip_address}): Sending back SYN-ACK')
+            print(f'{self.AS_id}({self.ip_address}): Sending back SYN-ACK to the SYN packet')
             self.send_tcp_msg(
                 _to=_from,
                 msg=CustomTcpMessage(type=ETCP_MSG_TYPE.SYN_ACK, seq_num=tcp_message.seq_num,
@@ -97,7 +97,7 @@ class CustomRouter:
             # Answer only if The sequence number is correct
             if tcp_message.seq_num == self.current_seq_num:
                 print(
-                    f"{self.AS_id}({self.ip_address}): Sending back SYN-ACK")
+                    f"{self.AS_id}({self.ip_address}): Sending back ACK to the SYN_ACK packet")
                 # Handshake is over from this part. Need to send back ACK to finalize it in the other router as well
                 self.send_tcp_msg(
                     _from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK, is_fin_ack_response=False))
@@ -115,7 +115,7 @@ class CustomRouter:
                     f"{self.AS_id}({self.ip_address}): ACK arrived to the FIN_ACK message. Disconnecting from router {_from.AS_id}")
             else:
                 # Handshake is over from both part now
-                print( bcolors.OKGREEN +f"+++\tConnection initialized between {self.AS_id} and {_from.AS_id}!\n" + bcolors.ENDC )
+                print( bcolors.OKGREEN +f"+++\tHandshake completed between {self.AS_id} and {_from.AS_id}!\n" + bcolors.ENDC )
 
                 # Update BGP from here...
                 self.send_tcp_msg(_from, CustomTcpMessage(
@@ -291,8 +291,9 @@ class CustomRouter:
         print(bcolors.OKGREEN +
               f"+++\tStarting handshake process between {self.AS_id} and {other_router.AS_id}" + bcolors.ENDC)
         self.send_tcp_msg(other_router, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
-        # These lines are not required thus if the send_tcp_msg is SYN type, the handshake is automatic within the send_packet and receive_packet
-        ### router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
-        ### self.receive_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.SYN_ACK))
-        ### router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.ACK))
+        # These lines are not required thus if the send_tcp_msg is SYN type, the handshake 
+        # is automatic within the send_packet and receive_packet
+                ### router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
+                ### self.receive_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.SYN_ACK))
+                ### router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.ACK))
         return
