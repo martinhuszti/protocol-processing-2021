@@ -74,14 +74,18 @@ class CustomNetwork:
                     return
 
         random_cost = random.randint(1,10)
-        router1.set_neighbor(router2, random_cost)
-        router2.set_neighbor(router1, random_cost)
+
 
         #SET UP ROUTING TABLE AFTER CREATION OF LINK
         self.links.append((router1, router2))
 
         # Excahning BGP Update
         router1.routers_handshake(router2)
+
+        # Exchaning/updating neighbor table
+        router1.set_neighbor(router2, random_cost)
+        router2.set_neighbor(router1, random_cost)
+
         newNLRI = [(router1.ip_address, router1.subnet, random_cost)]
         for entry in router1.routing_table:
             newNLRI.append((entry['destination_network'], entry['subnet_mask'], entry['cost']))
