@@ -3,7 +3,7 @@
 - Marco Bertolino
 - Martin Huszti 🌵
 - Mirko Ioris 🪐
-- Francesco Pavanello
+- Francesco Pavanello 👾
 - Victor Schmit ✊
 
 ## Insturctions
