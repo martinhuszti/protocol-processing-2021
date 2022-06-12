@@ -140,14 +140,15 @@ class CustomNetwork:
             print(bcolors.FAIL + 'Insert only numbers!' + bcolors.ENDC)
             return
 
-    def remove_router(self):
+    def remove_router(self, sr=None):
         if not self.routers:
             print('There are no more routers to remove!')
             return
         print(bcolors.OKCYAN)
         self._printRouters()
         print(bcolors.ENDC)
-        sr = input('Select which router you want to remove (press a letter to exit): ')
+        if not sr:
+            sr = input('Select which router you want to remove (press a letter to exit): ')
         if sr.isdigit() and int(sr) >= 0 and int(sr) <= len(self.routers) - 1:
             removed_router = self.routers.pop(int(sr))
             newlinks = []
@@ -220,7 +221,7 @@ class CustomNetwork:
         else:
             print(bcolors.FAIL + "The selected router index is not valid! Try again!" + bcolors.ENDC)
 
-    def update_link_cost(self):
+    def update_link_cost(self, selected_idx=None, new_cost=None):
         if not self.links:
             print('There are no more links to remove!')
             return
@@ -228,7 +229,8 @@ class CustomNetwork:
         print(bcolors.OKCYAN)
         self._printLinks()
         print(bcolors.ENDC)
-        selected_idx = input('Link to update: ')
+        if not selected_idx:
+            selected_idx = input('Link to update: ')
 
         checkIdx = re.compile(r'\d(\d)?')  # allow only decimals
         if checkIdx.match(selected_idx):  # if the user inserted numbers
@@ -241,7 +243,8 @@ class CustomNetwork:
                 selected_link = self.links[int(selected_idx)]
                 router1: CustomRouter = selected_link[0]
                 router2: CustomRouter = selected_link[1]
-                new_cost = input('Insert the new cost of the link: ')
+                if not new_cost:
+                    new_cost = input('Insert the new cost of the link: ')
                 if checkIdx.match(new_cost):  # if the user inserted numbers
                     new_cost = int(new_cost)  # we convert the string to int
                     router1.set_neighbor(router2, new_cost)
@@ -254,8 +257,8 @@ class CustomNetwork:
                         elif router.ip_address == router2.ip_address:
                             index2 = str(pos)
                         pos += 1
-                        
-                    self.remove_link(selected_idx)
+                    
+                    self.remove_link(str(selected_idx))
                     self.add_link(index1, index2, new_cost)
 
                     print(bcolors.OKGREEN + "The link cost was successfully update!" + bcolors.ENDC)
