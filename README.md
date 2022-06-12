@@ -4,7 +4,7 @@
 - Martin Huszti 🌵
 - Mirko Ioris 🪐
 - Francesco Pavanello
-- Victor Schmit
+- Victor Schmit ✊
 
 ## Insturctions
 Firstly install the dependencies with:
