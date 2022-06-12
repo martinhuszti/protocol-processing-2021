@@ -9,17 +9,21 @@ import random
 from prettytable import PrettyTable
 import string
 
-from custom_bgp_message import BGP_MSG_TYPE, KeepAliveBgpMessage, OpenBgpMessage, UpdateBgpMessage  # to print routing tables in a cute way
+# to print routing tables in a cute way
+from custom_bgp_message import BGP_MSG_TYPE, KeepAliveBgpMessage, OpenBgpMessage, UpdateBgpMessage
 
 # TODO: add missing input params when sending tcp messages
 
+
 class CustomRouter:
- 
+
     def __init__(self, AS_id='No AS_id given', ip_address="255.255.255.255", subnet=32):
         self.AS_id = AS_id
-        self.routing_table = []  # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost, reference
-        self.neighbor_table = [] # List of dictionaries with AS_id, ip_address, cost, reference
-        self.bgp_table = [] # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost
+        # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost, reference
+        self.routing_table = []
+        self.neighbor_table = []  # List of dictionaries with AS_id, ip_address, cost, reference
+        # List of dictionaries with destination_network, subnet_mask, AS_PATH, next_hop, cost
+        self.bgp_table = []
         self.links = []  # the link and the routing table index are matching
         self.ip_address = ip_address
         self.subnet = subnet
@@ -27,9 +31,10 @@ class CustomRouter:
         self.thread_life = 3
 
     def send_keep_alive(self):
-        while self.thread_life>0:
+        while self.thread_life > 0:
             self.thread_life -= 1
-            print("sending keep alive")
+            print(bcolors.OKCYAN +
+                  f"{self.AS_id}: Keep alive message sent" + bcolors.ENDC)
             time.sleep(2)
         return
 
@@ -41,54 +46,80 @@ class CustomRouter:
 
     ############################
 
-    def print_tables(self): 
+    def print_tables(self):
         t = PrettyTable()
         if not self.routing_table:
             print('This table is currently empty!')
             return
-        for c in ['Destination', 'Netmask', 'Gateway' ,'Cost']:
+        for c in ['Destination', 'Netmask', 'Gateway', 'Cost']:
             t.add_column(c, [])
         for dct in self.routing_table:
-            t.add_row([dct.get(c, "") for c in ['destination_network', 'subnet_mask', "next_hop" ,'cost']])
+            t.add_row([dct.get(c, "") for c in [
+                      'destination_network', 'subnet_mask', "next_hop", 'cost']])
         print(t)
 
     ########################
-
+    # SEND_TCP_MSG
     def send_tcp_msg(self, _to, msg: CustomTcpMessage):
-        self.current_seq_num = random.random()
         # If syn, generate seq number otherwise it is containing already
         if msg.type == ETCP_MSG_TYPE.SYN or msg.type == ETCP_MSG_TYPE.FIN:
+            self.current_seq_num = random.random()
             msg.seq_num = self.current_seq_num
-            print(f'{self.ip_address}: sending {msg.type.name} message to {_to.ip_address}')
-        # Simulate that the message is arrived to the router
+            print(
+                f'{self.AS_id}({self.ip_address}): Sending {msg.type.name} message to {_to.AS_id}({_to.ip_address})')
+        # Simulate that the message is arrived to the router. In other words: the destination router "receive" a tcp package
         _to.receive_tcp_msg(self, msg)
 
+    ########################
+
     def receive_tcp_msg(self, _from, tcp_message: CustomTcpMessage):
-        print(f'{self.ip_address}: TCP message arrived: {tcp_message.type.name}')
+        # If MSG type is none, it means it is BGP message!
+        if tcp_message.type != ETCP_MSG_TYPE.NONE:
+            print(
+                f'{self.AS_id}({self.ip_address}): TCP message arrived from {_from.AS_id}: {tcp_message.type.name}')
+        else:
+            print(
+                f'{self.AS_id}({self.ip_address}): {bcolors.WARNING}BGP{bcolors.ENDC} message arrived from {_from.AS_id}: {tcp_message.content.type.name}')
+
         _type = tcp_message.type
 
         # 1. Start with SYN
         if _type == ETCP_MSG_TYPE.SYN:
-            print(f'{self.ip_address}: sending back syn-ack with ')
-            self.send_tcp_msg(_to=_from, msg=CustomTcpMessage(
-                type=ETCP_MSG_TYPE.SYN_ACK, seq_num=tcp_message.seq_num, ip_address=self.ip_address,
-                subnet=self.subnet))
+            print(f'{self.AS_id}({self.ip_address}): Sending back SYN-ACK to the SYN packet')
+            self.send_tcp_msg(
+                _to=_from,
+                msg=CustomTcpMessage(type=ETCP_MSG_TYPE.SYN_ACK, seq_num=tcp_message.seq_num,
+                                     ip_address=self.ip_address, subnet=self.subnet)
+            )
 
         # 2. Answer with SYN-ACK and send the ip range
         if _type == ETCP_MSG_TYPE.SYN_ACK:
+            # Answer only if The sequence number is correct
             if tcp_message.seq_num == self.current_seq_num:
-                print(f"{self.ip_address}: The sequence number is correct, initializing connection")
-                self.send_tcp_msg(_from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK))
+                print(
+                    f"{self.AS_id}({self.ip_address}): Sending back ACK to the SYN_ACK packet")
+                # Handshake is over from this part. Need to send back ACK to finalize it in the other router as well
+                self.send_tcp_msg(
+                    _from, CustomTcpMessage(type=ETCP_MSG_TYPE.ACK, is_fin_ack_response=False))
                 self.current_seq_num = 0
-                self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
+                self.send_tcp_msg(_from, CustomTcpMessage(
+                    type=ETCP_MSG_TYPE.NONE,
+                    content=OpenBgpMessage(-1, 60, self.ip_address)
+                ))
 
-                
+        # 3. After SYN_ACK router have to send back ACK
         if _type == ETCP_MSG_TYPE.ACK:
             if tcp_message.is_fin_ack_response:
-                print(f"{self.ip_address}: ACK arrived to the FIN_ACK message")
+                # The routers are not connected anymore.
+                print(
+                    f"{self.AS_id}({self.ip_address}): ACK arrived to the FIN_ACK message. Disconnecting from router {_from.AS_id}")
             else:
-                print(f"{self.ip_address}: Initializing connection")
-                self.send_tcp_msg(_from, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
+                # Handshake is over from both part now
+                print( bcolors.OKGREEN +f"+++\tHandshake completed between {self.AS_id} and {_from.AS_id}!\n" + bcolors.ENDC )
+
+                # Update BGP from here...
+                self.send_tcp_msg(_from, CustomTcpMessage(
+                    ETCP_MSG_TYPE.NONE, content=OpenBgpMessage(-1, 60, self.ip_address)))
 
         if _type == ETCP_MSG_TYPE.FIN_ACK:
             print(
@@ -106,7 +137,7 @@ class CustomRouter:
                 type=ETCP_MSG_TYPE.FIN_ACK))
 
         if _type == ETCP_MSG_TYPE.NONE:
-            #assuming its a BGP MESSAGE
+            # assuming its a BGP MESSAGE
             bgp_message = tcp_message.content
             _bgptype = bgp_message.type
             if _bgptype == BGP_MSG_TYPE.OPEN:
@@ -116,7 +147,7 @@ class CustomRouter:
                     self.keep_alive_thread = threading.Thread(
                         target=self.send_keep_alive)
                     self.keep_alive_thread.start()
-   
+
             if _bgptype == BGP_MSG_TYPE.UPDATE:
                 print(f'{self.ip_address}: BGP message arrived: UPDATE')
                 if bgp_message.WithdrawnRoutes:
@@ -131,7 +162,8 @@ class CustomRouter:
                             newNLRI.append(ret)
                 for entry in self.neighbor_table:
                     if entry['AS_id'] not in bgp_message.ASPath:
-                        self.send_tcp_msg(entry['reference'], CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage(bgp_message.WithdrawnRoutes, bgp_message.ASPath, bgp_message.NextHop, newNLRI)))
+                        self.send_tcp_msg(entry['reference'], CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage(
+                            bgp_message.WithdrawnRoutes, bgp_message.ASPath, bgp_message.NextHop, newNLRI)))
 
     def send_packet(self, packet: CustomPacket):
         # If the router initializing the sending
@@ -159,12 +191,15 @@ class CustomRouter:
         tmp = False
         for entry in self.neighbor_table:
             if entry['ip_address'] == neighbor.ip_address:
-                entry['cost'] = cost #chosen randomly to assign different costs
+                # chosen randomly to assign different costs
+                entry['cost'] = cost
                 tmp = True
                 break
-        if not tmp: 
-            print(f"{self.ip_address}-set_neighbor: New neighbor added to the neighbor_table")
-            self.neighbor_table.append({'AS_id': neighbor.AS_id, 'ip_address': neighbor.ip_address, 'cost': cost, 'reference' : neighbor})
+        if not tmp:
+            print(
+                f"{self.ip_address}-set_neighbor: New neighbor added to the neighbor_table")
+            self.neighbor_table.append(
+                {'AS_id': neighbor.AS_id, 'ip_address': neighbor.ip_address, 'cost': cost, 'reference': neighbor})
 
     def remove_neighbor(self, neighbor):
         for entry in self.neighbor_table:
@@ -176,14 +211,15 @@ class CustomRouter:
     def select_next_hop(self, ip_address):
         for neighbor in self.neighbor_table:
             if ip_address == neighbor['ip_address']:
-                print(f"{self.ip_address}-select_next-hop: router found in neighbouring table!")
+                print(
+                    f"{self.ip_address}-select_next-hop: router found in neighbouring table!")
                 return neighbor
         for elem in self.routing_table:
             if ipaddress.ip_address(ip_address) in ipaddress.ip_network(f"{elem['destination_network']}/{elem['subnet_mask']}"):
                 for neighbor in self.neighbor_table:
                     if elem['next_hop'] == neighbor['ip_address']:
                         return neighbor
-        return None 
+        return None
 
     def update_routing_table(self, network, subnet_mask, AS_path, next_hop, cost):
 
@@ -191,7 +227,7 @@ class CustomRouter:
         new_cost = cost
         for neighbor in self.neighbor_table:
             if next_hop == neighbor['ip_address']:
-                if ipaddress.ip_address(next_hop) not in ipaddress.ip_network(network+"/"+str(subnet_mask)): 
+                if ipaddress.ip_address(next_hop) not in ipaddress.ip_network(network+"/"+str(subnet_mask)):
                     new_cost += neighbor['cost']
                 tmp = True
                 break
@@ -279,9 +315,14 @@ class CustomRouter:
             self.send_tcp_msg(neighbor['reference'], CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage(not_found_destinations,[self.AS_id], self.ip_address, newNLRI)))
             self.send_tcp_msg(neighbor['reference'], CustomTcpMessage(type=ETCP_MSG_TYPE.FIN, ip_address=self.ip_address, subnet=self.subnet))                
 
-    def routers_handshake(self, router2):
-        self.send_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
-        router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
-        self.receive_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.SYN_ACK))
-        router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.ACK))
+    # Custom function to do the handshake between two routers.
+    def routers_handshake(self, other_router):
+        print(bcolors.OKGREEN +
+              f"+++\tStarting handshake process between {self.AS_id} and {other_router.AS_id}" + bcolors.ENDC)
+        self.send_tcp_msg(other_router, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
+        # These lines are not required thus if the send_tcp_msg is SYN type, the handshake 
+        # is automatic within the send_packet and receive_packet
+                ### router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
+                ### self.receive_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.SYN_ACK))
+                ### router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.ACK))
         return
