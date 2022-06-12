@@ -18,7 +18,7 @@ def create_custom_router(predefined_name=None, addr=None, subn=None):
         # user inserts the IP of the router
         ip_address = input('Ip address:')
         valid_address = 0  # becomes 1 if IP is correct
-        checkIP = re.compile(r'\d(\d)?(\d)?\.')  # allow only decimals and dot
+        checkIP = re.compile(r'(\d\d?\d?\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?)')  # allow only decimals and dot
 
         while valid_address == 0:
             if len(ip_address) < 7:
@@ -34,13 +34,16 @@ def create_custom_router(predefined_name=None, addr=None, subn=None):
                 else:
                     octets = ip_address.split(".")  # split the IP in different subsection i.e.['1','2','3','4']
 
-                    for part in octets:  # check if the value in each part is valid
-                        if not 0 <= int(part) <= 255:
-                            print(bcolors.WARNING + 'You inserted an invalid IP!' + bcolors.ENDC)
-                            valid_address = 0
-                            break
-                        else:
-                            valid_address = 1
+                    if octets[3].isnumeric():  # necessary, otherwise 1.2.3.4- was valid and caused a crash
+                        for part in octets:  # check if the value in each part is valid
+                            if not 0 <= int(part) <= 255:
+                                print(bcolors.WARNING + 'You inserted an invalid IP!' + bcolors.ENDC)
+                                valid_address = 0
+                                break
+                            else:
+                                valid_address = 1
+                    else:
+                        print(bcolors.WARNING + 'You inserted a wrong character in the last part of the octet!' + bcolors.ENDC)
             else:
                 print(bcolors.WARNING + 'You inserted wrong characters!'
                                         '\nUse only numbers and the dot (.) between them!' + bcolors.ENDC)

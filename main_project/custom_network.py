@@ -110,7 +110,7 @@ class CustomNetwork:
 
     def remove_link(self, index=None):
         if not self.links:
-            print('There are no more links to remove!')
+            print(bcolors.WARNING +'There are no more links to remove!' + bcolors.ENDC)
             return
 
         print(bcolors.OKCYAN)
