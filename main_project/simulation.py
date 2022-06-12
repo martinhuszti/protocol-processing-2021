@@ -6,7 +6,7 @@ from custom_packet import CustomPacket
 import time
 
 
-def start_simulation():
+def start_simulation(oldNetwork):
     network = CustomNetwork()
     print("Welcome to the simulation!\n\n")
 
@@ -93,6 +93,15 @@ def start_simulation():
     print("#####################################################\n")  
     time.sleep(2)
     network.add_link(0, 1)
+    
+    time.sleep(2)
+
+    print("\n#####################################################\n")
+    print("Printing Current routing tables\n")
+    print("#####################################################\n")  
+    time.sleep(2)
+    network.print_network()
+
 
     time.sleep(2)
 
@@ -130,7 +139,7 @@ def start_simulation():
 
     print("\n#####################################################\n")
     print("This is the end of our simulation\n")
-    answer = input("Do you want to keep the current network? (y/n)")
+    answer = input("Do you want to keep the current network? (y/n): ")
     ###########################For dev purposes, NEEDS TO BE CHANGED###########################
 
     ###########################################################################################
@@ -139,8 +148,19 @@ def start_simulation():
         print("Returning to main menu keeping the current network\n")
         print("#####################################################\n") 
         return network
+
     else:
         print("\n#####################################################\n")
-        print("Returning to main menu with a new network\n")
-        print("#####################################################\n")
-        return CustomNetwork()
+        answer = input("Do you want to keep your old network (before starting the simulation)? (y/n): ")
+        if answer.lower() == "y":
+
+            print("\n#####################################################\n")
+            print("Returning to main menu with your previous network\n")
+            print("#####################################################\n") 
+            return oldNetwork
+
+        else:
+            print("\n#####################################################\n")
+            print("Returning to main menu with a new network\n")
+            print("#####################################################\n") 
+            return CustomNetwork()

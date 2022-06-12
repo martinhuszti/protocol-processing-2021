@@ -48,8 +48,11 @@ while True:
         user_interface.control_panel()
         continue
     if sc == 9:
-        network = start_simulation()
+        network = start_simulation(network)
     if sc == 10:
+        print("Network has been reset\n")
+        network = CustomNetwork()
+    if sc == 11:
         break
 
 user_interface.goodbye()

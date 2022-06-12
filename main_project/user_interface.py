@@ -27,8 +27,9 @@ def control_panel():
     print("- 6. Send packet from router to router")
     print("- 7. Update link cost")
     print("- 8. Show commands")
-    print("- 9. Start simulation\n")
-    print("- 10. Exit\n")
+    print("- 9. Start simulation")
+    print("- 10. Reset current network\n")
+    print("- 11. Exit\n")
 
 def goodbye():
     
