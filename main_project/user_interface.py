@@ -10,7 +10,7 @@ def welcome():
           "Turku - 2021 The program made by:"+bcolors.ENDC)
     print(bcolors.OKBLUE + "- Marco Bertolino ")
     print("- Martin Huszti 🌵 ")
-    print("- Mirko Ioris")
+    print("- Mirko Ioris 🪐 ")
     print("- Francesco Pavanello")
     print("- Victor Schmit"+bcolors.ENDC)
     print_line()
