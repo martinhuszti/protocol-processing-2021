@@ -233,7 +233,7 @@ class CustomNetwork:
         checkIdx = re.compile(r'\d(\d)?')  # allow only decimals
         if checkIdx.match(selected_idx):  # if the user inserted numbers
             selected_idx = int(selected_idx)  # we convert the string to int
-
+ 
             if selected_idx >= len(self.links):
                 print(bcolors.FAIL + 'Wrong index!' + bcolors.ENDC)
                 return
