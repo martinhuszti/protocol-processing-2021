@@ -304,7 +304,7 @@ class CustomRouter:
                 if deleted_destination[0] == entry["destination_network"] and deleted_destination[1] == entry['subnet_mask']:
                     if not new_route:
                         new_route = entry
-                    elif entry["cost"] < new_route["cost"]:
+                    elif entry["cost"] < new_route["cost"] or (entry['cost'] == new_route["cost"] and len(new_route["AS_path"]) > len(entry["AS_path"])):
                         new_route = entry
             if new_route:  
                 ret = self.update_routing_table(new_route["destination_network"], new_route['subnet_mask'], new_route['AS_path'], new_route['next_hop'], new_route['cost'])       
