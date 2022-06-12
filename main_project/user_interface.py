@@ -8,7 +8,7 @@ def print_line():
 def welcome():
     print(bcolors.BOLD + bcolors.UNDERLINE +
           "Turku - 2021 The program made by:"+bcolors.ENDC)
-    print(bcolors.OKBLUE + "- Marco Bertolino ")
+    print(bcolors.OKBLUE + "- Marco Bertolino 🦄 ")
     print("- Martin Huszti 🌵 ")
     print("- Mirko Ioris 🪐 ")
     print("- Francesco Pavanello 👾 ")
