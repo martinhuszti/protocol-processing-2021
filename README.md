@@ -2,7 +2,7 @@
 ## Team
 - Marco Bertolino
 - Martin Huszti 🌵
-- Mirko Ioris
+- Mirko Ioris 🪐
 - Francesco Pavanello
 - Victor Schmit
 
