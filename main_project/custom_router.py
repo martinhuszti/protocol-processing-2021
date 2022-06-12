@@ -120,15 +120,15 @@ class CustomRouter:
             if _bgptype == BGP_MSG_TYPE.UPDATE:
                 print(f'{self.ip_address}: BGP message arrived: UPDATE')
                 if bgp_message.WithdrawnRoutes:
-                    for route in bgp_message.WithdrawnRoutes:
-                        self.remove_route(route) 
-                        # TODO: remove also all the possible routes that become invalid
-                bgp_message.ASPath.append(self.AS_id)
-                print(bgp_message.ASPath)
-                newNLRI = []               
+                    for destination in bgp_message.WithdrawnRoutes:
+                        self.remove_routes(destination[0])
+                newNLRI = []       
+                bgp_message.ASPath.append(self.AS_id)     
                 for nlri in bgp_message.NLRI:
                     if nlri[0] != self.ip_address:
-                        newNLRI.append(self.update_routing_table(nlri[0], nlri[1], bgp_message.ASPath, _from.ip_address, nlri[2]))
+                        ret = self.update_routing_table(nlri[0], nlri[1], nlri[2], _from.ip_address, nlri[3])
+                        if ret:
+                            newNLRI.append(ret)
                 for entry in self.neighbor_table:
                     if entry['AS_id'] not in bgp_message.ASPath:
                         self.send_tcp_msg(entry['reference'], CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage(bgp_message.WithdrawnRoutes, bgp_message.ASPath, bgp_message.NextHop, newNLRI)))
@@ -170,6 +170,8 @@ class CustomRouter:
         for entry in self.neighbor_table:
             if entry['ip_address'] == neighbor.ip_address:
                 self.neighbor_table.remove(entry)
+                break
+        self.remove_routes(neighbor.ip_address)
 
     def select_next_hop(self, ip_address):
         for neighbor in self.neighbor_table:
@@ -202,14 +204,13 @@ class CustomRouter:
             for elem in self.bgp_table:
                 if network == elem['destination_network'] and subnet_mask == elem['subnet_mask'] and AS_path == elem['AS_path'] and next_hop == elem['next_hop']:
                     already_in_bgp_table = True
-                    print("Already in BGP table")
                     break
                 pos += 1
             if not already_in_bgp_table:
-                self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': new_cost})
+                if self.AS_id not in AS_path:
+                    self.bgp_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': new_cost})
             else:
-                self.routing_table[pos]['cost'] = new_cost
-
+                self.bgp_table[pos]['cost'] = new_cost
 
             ###routing_table###
             already_in_routing_table = False
@@ -217,36 +218,66 @@ class CustomRouter:
             for elem in self.routing_table:
                 if network == elem['destination_network'] and subnet_mask == elem['subnet_mask']:
                     already_in_routing_table = True
-                    print("Already in routing table")
                     break
                 pos += 1
+            tmp = False
             if not already_in_routing_table:
-                self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': new_cost})
+                if self.AS_id not in AS_path:
+                    self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': new_cost})
+                    tmp = True
             else:
                 if self.routing_table[pos]['cost'] > new_cost or (self.routing_table[pos]['cost'] == new_cost and len(self.routing_table[pos]['AS_path']) > len(AS_path)):
                     self.routing_table[pos]['cost'] = new_cost
                     self.routing_table[pos]['next_hop'] = next_hop
                     self.routing_table[pos]['AS_path'] = AS_path
-            return((network, subnet_mask, new_cost))
+                    tmp = True
+            if tmp:
+                new_AS_path = []
+                for elem in AS_path:
+                    new_AS_path.append(elem)
+                new_AS_path.append(self.AS_id)
+                return (network, subnet_mask, new_AS_path, new_cost)
+            else:
+                return None
 
-    def remove_route(self, route):
+    def remove_routes(self, ip_address_unreachable):
+        deleted_destinations = []
+        new_routing_table = []
         for entry in self.routing_table:
-            if route.network == entry["destination_network"] and route.subnet == entry['subnet_mask'] and route.AS_path == entry["AS_path"]:
-                self.routing_table.remove(entry)
-        for entry in self.bgp_table:
-            if route.network == entry["destination_network"] and route.subnet == entry['subnet_mask'] and route.AS_path == entry["AS_path"]:
+            if entry["next_hop"] == ip_address_unreachable or entry["destination_network"] == ip_address_unreachable:
+                deleted_destinations.append((entry["destination_network"], entry['subnet_mask']))
                 self.bgp_table.remove(entry)
+            else:
+                new_routing_table.append(entry)
+        self.routing_table = new_routing_table
+        new_bgp_table = []
+        for entry_bgp in self.bgp_table:
+            if entry_bgp["next_hop"] != ip_address_unreachable:
+                new_bgp_table.append(entry_bgp)
+        self.bgp_table = new_bgp_table
 
-        new_route = None
-        for entry in self.bgp_table:
-            if route.network == entry["destination_network"] and route.subnet == entry['subnet_mask']:
-                if not new_route:
-                    new_route = entry
-                elif entry["cost"] < new_route["cost"]:
-                    new_route = entry
+        not_found_destinations = []
+        newNLRI = []
+        for elem in deleted_destinations:
+            not_found_destinations.append(elem)
+        for deleted_destination in deleted_destinations:
+            new_route = None
+            for entry in self.bgp_table:
+                if deleted_destination[0] == entry["destination_network"] and deleted_destination[1] == entry['subnet_mask']:
+                    if not new_route:
+                        new_route = entry
+                    elif entry["cost"] < new_route["cost"]:
+                        new_route = entry
+            if new_route:  
+                ret = self.update_routing_table(new_route["destination_network"], new_route['subnet_mask'], new_route['AS_path'], new_route['next_hop'], new_route['cost'])       
+                if ret:
+                    newNLRI.append(ret)
+                not_found_destinations.remove(deleted_destination)
         
-        if new_route:
-            self.routing_table.append(new_route)
+        for neighbor in self.neighbor_table:
+            self.routers_handshake(neighbor['reference'])
+            self.send_tcp_msg(neighbor['reference'], CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage(not_found_destinations,[self.AS_id], self.ip_address, newNLRI)))
+            self.send_tcp_msg(neighbor['reference'], CustomTcpMessage(type=ETCP_MSG_TYPE.FIN, ip_address=self.ip_address, subnet=self.subnet))                
 
     def routers_handshake(self, router2):
         self.send_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.SYN))

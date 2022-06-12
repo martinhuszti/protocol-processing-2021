@@ -33,7 +33,7 @@ class CustomNetwork:
         return len(self.routers)
 
     # idx1 and idx2 are for testing purposes
-    def add_link(self, idx1=None, idx2=None):
+    def add_link(self, idx1=None, idx2=None, cost=None):
         print(bcolors.OKCYAN)
         self._printRouters()
         print(bcolors.ENDC)
@@ -73,7 +73,10 @@ class CustomNetwork:
                     print(bcolors.FAIL + "Invalid option!" + bcolors.ENDC)
                     return
 
-        random_cost = random.randint(1,10)
+        if cost:
+            random_cost = cost
+        else:
+            random_cost = random.randint(1,10)
         router1.set_neighbor(router2, random_cost)
         router2.set_neighbor(router1, random_cost)
 
@@ -82,21 +85,30 @@ class CustomNetwork:
 
         # Excahning BGP Update
         router1.routers_handshake(router2)
-        newNLRI = [(router1.ip_address, router1.subnet, random_cost)]
+        
+        newNLRI = [(router1.ip_address, router1.subnet, [router1.AS_id], random_cost)]
         for entry in router1.routing_table:
-            newNLRI.append((entry['destination_network'], entry['subnet_mask'], entry['cost']))
+            new_AS_path = []
+            for elem in entry['AS_path']:
+                new_AS_path.append(elem)
+            new_AS_path.append(router1.AS_id)
+            newNLRI.append((entry['destination_network'], entry['subnet_mask'], new_AS_path, entry['cost']))
         router1.send_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage([],[router1.AS_id], router1.ip_address, newNLRI)))
 
-        newNLRI = [(router2.ip_address, router2.subnet, random_cost)]
+        newNLRI = [(router2.ip_address, router2.subnet, [router2.AS_id], random_cost)]
         for entry in router2.routing_table:
-            newNLRI.append((entry['destination_network'], entry['subnet_mask'], entry['cost']))
+            new_AS_path = []
+            for elem in entry['AS_path']:
+                new_AS_path.append(elem)
+            new_AS_path.append(router2.AS_id)
+            newNLRI.append((entry['destination_network'], entry['subnet_mask'], new_AS_path, entry['cost']))
         router2.send_tcp_msg(router1, CustomTcpMessage(ETCP_MSG_TYPE.NONE, content=UpdateBgpMessage([], [router2.AS_id], router2.ip_address, newNLRI)))
 
         router1.send_tcp_msg(router2, CustomTcpMessage(type=ETCP_MSG_TYPE.FIN, ip_address=router1.ip_address, subnet=router1.subnet))
 
         print(bcolors.OKGREEN + 'Link created between the two router' + bcolors.ENDC)
 
-    def remove_link(self):
+    def remove_link(self, index=None):
         if not self.links:
             print('There are no more links to remove!')
             return
@@ -104,7 +116,10 @@ class CustomNetwork:
         print(bcolors.OKCYAN)
         self._printLinks()
         print(bcolors.ENDC)
-        selected_idx = input('Link to remove: ')
+        if index:
+            selected_idx = str(index)
+        else:
+            selected_idx = input('Link to remove: ')
 
         checkIdx = re.compile(r'\d(\d)?')  # allow only decimals
         if checkIdx.match(selected_idx):  # if the user inserted numbers
@@ -135,13 +150,17 @@ class CustomNetwork:
         sr = input('Select which router you want to remove (press a letter to exit): ')
         if sr.isdigit() and int(sr) >= 0 and int(sr) <= len(self.routers) - 1:
             removed_router = self.routers.pop(int(sr))
+            newlinks = []
             for link in self.links:
-                if removed_router in link :
-                    router1: CustomRouter = link[0]
-                    router2: CustomRouter = link[1]
-                    router1.remove_neighbor(router2)
+                router1: CustomRouter = link[0]
+                router2: CustomRouter = link[1]
+                if router1.ip_address == removed_router.ip_address:
                     router2.remove_neighbor(router1)
-                    self.links.remove(link)
+                elif router2.ip_address == removed_router.ip_address:
+                    router1.remove_neighbor(router2)
+                else:
+                    newlinks.append(link)
+            self.links = newlinks
                     
             print(bcolors.OKGREEN + "The router was successfully removed!" + bcolors.ENDC)
         else:
@@ -227,6 +246,18 @@ class CustomNetwork:
                     new_cost = int(new_cost)  # we convert the string to int
                     router1.set_neighbor(router2, new_cost)
                     router2.set_neighbor(router1, new_cost)
+
+                    pos = 0
+                    for router in self.routers:
+                        if router.ip_address == router1.ip_address:
+                            index1 = str(pos)
+                        elif router.ip_address == router2.ip_address:
+                            index2 = str(pos)
+                        pos += 1
+                        
+                    self.remove_link(selected_idx)
+                    self.add_link(index1, index2, new_cost)
+
                     print(bcolors.OKGREEN + "The link cost was successfully update!" + bcolors.ENDC)
                 else:
                     print(bcolors.FAIL + 'Insert only numbers!' + bcolors.ENDC)
