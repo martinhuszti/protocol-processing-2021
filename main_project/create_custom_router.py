@@ -18,7 +18,7 @@ def create_custom_router(predefined_name=None, addr=None, subn=None):
         # user inserts the IP of the router
         ip_address = input('Ip address:')
         valid_address = 0  # becomes 1 if IP is correct
-        checkIP = re.compile(r'[0-9]\.[0-9]\.[0-9]\.[0-9]\.')  # allow only decimals and dot
+        checkIP = re.compile(r'(\d\d?\d?\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?)')  # allow only decimals and dot
 
         while valid_address == 0:
             if len(ip_address) < 7:
