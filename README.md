@@ -1,6 +1,6 @@
 # Network Simulator for Protocol Processing 2021!
 ## Team
-- Marco Bertolino
+- Marco Bertolino 🦄
 - Martin Huszti 🌵
 - Mirko Ioris 🪐
 - Francesco Pavanello 👾
