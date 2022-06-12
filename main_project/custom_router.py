@@ -262,7 +262,9 @@ class CustomRouter:
                     self.routing_table.append({'destination_network': network, 'subnet_mask': subnet_mask, 'AS_path': AS_path, 'next_hop': next_hop, 'cost': new_cost})
                     tmp = True
             else:
-                if self.routing_table[pos]['cost'] > new_cost or (self.routing_table[pos]['cost'] == new_cost and len(self.routing_table[pos]['AS_path']) > len(AS_path)):
+                if self.routing_table[pos]['AS_path'] == AS_path and self.routing_table[pos]['next_hop'] == next_hop: #they are the same route -> there should be a change in a link cost
+                    self.routing_table[pos]['cost'] = new_cost
+                elif self.routing_table[pos]['cost'] > new_cost or (self.routing_table[pos]['cost'] == new_cost and len(self.routing_table[pos]['AS_path']) > len(AS_path)):
                     self.routing_table[pos]['cost'] = new_cost
                     self.routing_table[pos]['next_hop'] = next_hop
                     self.routing_table[pos]['AS_path'] = AS_path
