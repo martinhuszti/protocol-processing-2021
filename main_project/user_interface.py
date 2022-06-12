@@ -12,7 +12,7 @@ def welcome():
     print("- Martin Huszti 🌵 ")
     print("- Mirko Ioris 🪐 ")
     print("- Francesco Pavanello")
-    print("- Victor Schmit"+bcolors.ENDC)
+    print("- Victor Schmit ✊ "+bcolors.ENDC)
     print_line()
     print(bcolors.BOLD + bcolors.HEADER +
         'Moi! Welcome to our network simulator for Protocol Processing 2021! 🔥 \n' + bcolors.ENDC)
