@@ -11,7 +11,7 @@ def welcome():
     print(bcolors.OKBLUE + "- Marco Bertolino ")
     print("- Martin Huszti 🌵 ")
     print("- Mirko Ioris 🪐 ")
-    print("- Francesco Pavanello")
+    print("- Francesco Pavanello 👾")
     print("- Victor Schmit"+bcolors.ENDC)
     print_line()
     print(bcolors.BOLD + bcolors.HEADER +
