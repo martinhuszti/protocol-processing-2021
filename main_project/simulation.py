@@ -140,9 +140,8 @@ def start_simulation(oldNetwork):
     print("\n#####################################################\n")
     print("This is the end of our simulation\n")
     answer = input("Do you want to keep the current network? (y/n): ")
-    ###########################For dev purposes, NEEDS TO BE CHANGED###########################
 
-    ###########################################################################################
+
     if answer.lower() == "y":
         print("\n#####################################################\n")
         print("Returning to main menu keeping the current network\n")

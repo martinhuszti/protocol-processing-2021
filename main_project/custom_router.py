@@ -12,8 +12,6 @@ import string
 # to print routing tables in a cute way
 from custom_bgp_message import BGP_MSG_TYPE, KeepAliveBgpMessage, OpenBgpMessage, UpdateBgpMessage
 
-# TODO: add missing input params when sending tcp messages
-
 
 class CustomRouter:
 
@@ -322,9 +320,4 @@ class CustomRouter:
         print(bcolors.OKGREEN +
               f"+++\tStarting handshake process between {self.AS_id} and {other_router.AS_id}" + bcolors.ENDC)
         self.send_tcp_msg(other_router, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
-        # These lines are not required thus if the send_tcp_msg is SYN type, the handshake 
-        # is automatic within the send_packet and receive_packet
-                ### router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.SYN))
-                ### self.receive_tcp_msg(router2, CustomTcpMessage(ETCP_MSG_TYPE.SYN_ACK))
-                ### router2.receive_tcp_msg(self, CustomTcpMessage(ETCP_MSG_TYPE.ACK))
         return

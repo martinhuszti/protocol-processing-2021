@@ -12,15 +12,6 @@ user_interface.welcome()
 # Show the possible commands
 user_interface.control_panel()
 
-# Tasks to be implemented:
-
-# Each router has router table
-# Create suitable IP packets (need header field)
-# Error conditions (router offline, link dropped)
-# Voting
-#
-
-# BGP Messages: OPEN, UPDATE, NOTIFICATION, KEEP_ALIVE
 while True:
     sc = read_command()
     if sc == 1:
